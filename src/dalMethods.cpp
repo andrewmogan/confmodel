@@ -281,7 +281,7 @@ nlohmann::json get_json_config(conffwk::Configuration& confdb,
 
 nlohmann::json Jsonable::to_json(bool direct_only) const {
 
-  return get_json_config(p_db, class_name(), UID(), direct_only);
+  return get_json_config(p_registry.configuration(), class_name(), UID(), direct_only);
 }
 
 const std::vector<std::string> DaqApplication::construct_commandline_parameters(

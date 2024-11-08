@@ -4,7 +4,7 @@
 #include <exception>
 
 #include "conffwk/Configuration.hpp"
-#include "conffwk/DalObject.hpp"
+// #include "conffwk/DalObject.hpp"
 #include "nlohmann/json.hpp"
 
 #include "confmodel/Application.hpp"

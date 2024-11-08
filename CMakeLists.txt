@@ -24,10 +24,10 @@ daq_add_library(dalMethods.cpp
   logging::logging nlohmann_json::nlohmann_json)
 
 
-daq_add_application(listApps list_apps.cxx
+daq_add_application(confmodel_list_apps list_apps.cxx
   LINK_LIBRARIES confmodel conffwk::conffwk)
 
-daq_add_application(disable_test disable_test.cxx TEST
+daq_add_application(confmodel_disable_test disable_test.cxx TEST
   LINK_LIBRARIES confmodel conffwk::conffwk logging::logging)
 ##############################################################################
 
