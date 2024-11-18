@@ -13,6 +13,7 @@
 #include "confmodel/DaqApplication.hpp"
 #include "confmodel/DaqModule.hpp"
 #include "confmodel/Jsonable.hpp"
+#include "confmodel/OpMonURI.hpp"
 #include "confmodel/PhysicalHost.hpp"
 #include "confmodel/RCApplication.hpp"
 #include "confmodel/Resource.hpp"
@@ -157,11 +158,27 @@ dunedaq::confmodel::Component::get_parents(
 
 // ========================================================================
 
-static std::vector<const Application*> getSegmentApps(const Segment* segment) {
-  auto apps = segment->get_applications();
+  static std::vector<const Application*> getSegmentApps(const Segment* segment,
+                                                        const Session* session,
+                                                        bool enabled_only) {
+  std::vector<const Application*> apps;
+  auto segapps = segment->get_applications();
+  if (enabled_only) {
+    for (auto app : segapps) {
+      auto comp = app->cast<Component>();
+      if (comp == nullptr || !comp->disabled(*session)) {
+        apps.insert(apps.end(), app);
+      }
+    }
+  }
+  else {
+    apps.swap(segapps);
+  }
   for (auto seg : segment->get_segments()) {
-    auto segapps = getSegmentApps(seg);
-    apps.insert(apps.end(), segapps.begin(),segapps.end());
+    if (!enabled_only || !seg->disabled(*session)) {
+      auto segapps = getSegmentApps(seg, session, enabled_only);
+      apps.insert(apps.end(), segapps.begin(),segapps.end());
+    }
   }
   return apps;
 }
@@ -169,7 +186,15 @@ static std::vector<const Application*> getSegmentApps(const Segment* segment) {
 std::vector<const Application*>
 Session::get_all_applications() const {
   std::vector<const Application*> apps;
-  auto segapps = getSegmentApps(m_segment);
+  auto segapps = getSegmentApps(m_segment, this, false);
+  apps.insert(apps.end(), segapps.begin(),segapps.end());
+  return apps;
+}
+
+std::vector<const Application*>
+Session::get_enabled_applications() const {
+  std::vector<const Application*> apps;
+  auto segapps = getSegmentApps(m_segment, this, true);
   apps.insert(apps.end(), segapps.begin(),segapps.end());
   return apps;
 }
@@ -298,6 +323,8 @@ const std::vector<std::string> RCApplication::construct_commandline_parameters(
     const std::string configuration_uri = confdb.get_impl_spec();
     const dunedaq::confmodel::Service* control_service = nullptr;
 
+    const std::string controller_log_level = session->get_controller_log_level();
+
     for (auto const* as: get_exposes_service())
       if (as->UID() == UID()+"_control") // unclear this is the best way to do this.
         control_service = as;
@@ -312,7 +339,7 @@ const std::vector<std::string> RCApplication::construct_commandline_parameters(
       + ":"
       + std::to_string(control_service->get_port());
 
-    std::vector<std::string> ret = {};
+    std::vector<std::string> ret = { "-l", controller_log_level };
     ret.push_back(configuration_uri);
     ret.push_back(control_uri);
     ret.push_back(UID());
@@ -389,4 +416,20 @@ std::vector<const confmodel::DetectorStream*> DetectorToDaqConnection::get_strea
 
   return streams;
 }
+
+std::string OpMonURI::get_URI( const std::string & app ) const {
+
+  auto type = get_type();
+  if ( type == "file" ) { 
+    return type + "://" + get_path();
+  }
+  
+  if ( type == "stream" ) {
+    return type + "://" + get_path();
+  }
+  
+  return "stdout://";  
 }
+
+}
+

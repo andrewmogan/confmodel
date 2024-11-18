@@ -106,39 +106,15 @@ const std::vector<std::string> construct_commandline_parameters_appfwk(
                                   ":" +
                                   std::to_string(control_service->get_port());
 
-  const dunedaq::confmodel::Application *opmon_app = nullptr;
-  for (auto const *ia : session->get_infrastructure_applications())
-    if (ia->castable("OpMonService"))
-      opmon_app = ia;
-
-  if (opmon_app == nullptr)
-    throw NoOpmonInfrastructure(ERS_HERE, session->UID());
-
-  const dunedaq::confmodel::Service *opmon_service =
-      opmon_app->get_exposes_service()[0];
-  std::string opmon_uri = opmon_service->get_protocol() + "://" +
-                          opmon_app->get_runs_on()->get_runs_on()->UID() + ":" +
-                          std::to_string(opmon_service->get_port()) +
-                          opmon_service->get_path();
-
-  if (opmon_service->get_protocol() == "file") {
-    auto file_name = opmon_service->get_path();
-    auto dot_pos = file_name.find('.');
-    if (dot_pos == std::string::npos)
-      throw InvalidOpMonFile(ERS_HERE, file_name);
-    file_name.insert(dot_pos, '_' + app->UID());
-    opmon_uri = opmon_service->get_protocol() + "://" + file_name;
-  }
-
   const std::string configuration_uri = confdb.get_impl_spec();
 
   return {
+      "-s",
+      session->UID(),
       "--name",
       app->UID(),
       "-c",
       control_uri,
-      "-i",
-      opmon_uri,
       "--configurationService",
       configuration_uri,
   };

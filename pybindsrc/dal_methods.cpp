@@ -44,6 +44,17 @@ namespace dunedaq::confmodel::python {
     return apps;
   }
 
+  std::vector<ObjectLocator>
+  session_get_enabled_applications(const Configuration& db,
+                                   const std::string& session_name) {
+    auto session=const_cast<Configuration&>(db).get<Session>(session_name);
+    std::vector<ObjectLocator> apps;
+    for (auto app : session->get_enabled_applications()) {
+      apps.push_back({app->UID(),app->class_name()});
+    }
+    return apps;
+  }
+
   void
   session_set_disabled(const Configuration& db,
                        const std::string& session_name,
@@ -128,7 +139,8 @@ register_dal_methods(py::module& m)
     .def_readonly("class_name", &ObjectLocator::class_name)
     ;
 
-  m.def("session_get_all_applications", &session_get_all_applications, "Get list of applications in the requested session");
+  m.def("session_get_all_applications", &session_get_all_applications, "Get list of ALL applications (regardless of enabled/disabled state) in the requested session");
+  m.def("session_get_enabled_applications", &session_get_enabled_applications, "Get list of enabled applications in the requested session");
   m.def("session_set_disabled", &session_set_disabled, "Temporarily disable Components in the requested session");
 
   m.def("component_disabled", &component_disabled, "Determine if a Component-derived object (e.g. a Segment) has been disabled");

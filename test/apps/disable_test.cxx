@@ -48,12 +48,14 @@ int main(int argc, char* argv[]) {
     return 0;
   }
 
-  dunedaq::logging::Logging::setup();
-
   std::string confimpl = "oksconflibs:" + std::string(argv[2]);
   auto confdb = new conffwk::Configuration(confimpl);
 
   std::string sessionName(argv[1]);
+
+  
+  dunedaq::logging::Logging::setup(sessionName, "disable-test");
+
   auto session = confdb->get<confmodel::Session>(sessionName);
   if (session == nullptr) {
     std::cerr << "Session " << sessionName << " not found in database\n";
