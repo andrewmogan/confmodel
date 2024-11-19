@@ -326,7 +326,7 @@ const std::vector<std::string> RCApplication::construct_commandline_parameters(
     const std::string controller_log_level = session->get_controller_log_level();
 
     for (auto const *as : get_exposes_service()) {
-      if (as->UID().ends_with("control")) {
+      if (as->UID().ends_with("_control")) {
         if (control_service)
           throw DuplicatedControlService(ERS_HERE, as->UID());
         control_service = as;

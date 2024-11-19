@@ -29,7 +29,7 @@ ERS_DECLARE_ISSUE_BASE(
 ERS_DECLARE_ISSUE_BASE(
     confmodel, NoControlServiceDefined, ConfigurationError,
     "The control service has not been set up for the application " + app_name +
-        " you need to define a service called which has a name finishing with \'control\'",
+        " you need to define a service called which has a name finishing with \'_control\'",
     , ((std::string)app_name)
 )
 
@@ -103,7 +103,7 @@ const std::vector<std::string> construct_commandline_parameters_appfwk(
   const dunedaq::confmodel::Service *control_service = nullptr;
 
   for (auto const *as : app->get_exposes_service()) {
-    if (as->UID().ends_with("control")) {
+    if (as->UID().ends_with("_control")) {
       if (control_service)
         throw DuplicatedControlService(ERS_HERE, as->UID());
       control_service = as;
