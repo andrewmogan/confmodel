@@ -325,9 +325,13 @@ const std::vector<std::string> RCApplication::construct_commandline_parameters(
 
     const std::string controller_log_level = session->get_controller_log_level();
 
-    for (auto const* as: get_exposes_service())
-      if (as->UID() == UID()+"_control") // unclear this is the best way to do this.
+    for (auto const *as : get_exposes_service()) {
+      if (as->UID().ends_with("_control")) {
+        if (control_service)
+          throw DuplicatedControlService(ERS_HERE, as->UID());
         control_service = as;
+      }
+    }
 
     if (control_service == nullptr)
       throw NoControlServiceDefined(ERS_HERE, UID());
@@ -358,7 +362,7 @@ std::vector<const confmodel::DetDataSender*> DetectorToDaqConnection::get_sender
           senders.push_back(sender);
       }
       else {
-          // Look for a resource set containing senders 
+          // Look for a resource set containing senders
           auto rs = d2d_res->cast<confmodel::ResourceSet>();
           if (rs != nullptr) {
               // Look for senders in resource set
@@ -382,7 +386,7 @@ const confmodel::DetDataReceiver* DetectorToDaqConnection::get_receiver() const 
 
   for ( auto d2d_res : this->get_contains() ) {
       auto r = d2d_res->cast<confmodel::DetDataReceiver>();
-      if ( r == nullptr ) 
+      if ( r == nullptr )
         continue;
 
       receivers.push_back(r);
@@ -409,7 +413,7 @@ std::vector<const confmodel::DetectorStream*> DetectorToDaqConnection::get_strea
         if ( !stream ) {
           throw(ConfigurationError(ERS_HERE, "DetectorToDaqConnection : Non-stream object '"+stream_res->UID()+"' found in DetDataSender '"+stream_res->UID()+"'"));
         }
-        
+
         streams.push_back(stream->cast<confmodel::DetectorStream>());
       }
     }
@@ -420,15 +424,15 @@ std::vector<const confmodel::DetectorStream*> DetectorToDaqConnection::get_strea
 std::string OpMonURI::get_URI( const std::string & app ) const {
 
   auto type = get_type();
-  if ( type == "file" ) { 
+  if ( type == "file" ) {
     return type + "://" + get_path();
   }
-  
+
   if ( type == "stream" ) {
     return type + "://" + get_path();
   }
-  
-  return "stdout://";  
+
+  return "stdout://";
 }
 
 }
