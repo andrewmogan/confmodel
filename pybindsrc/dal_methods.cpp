@@ -60,9 +60,9 @@ namespace dunedaq::confmodel::python {
                        const std::string& session_name,
                        const std::vector<std::string>& comps) {
     auto session=const_cast<Configuration&>(db).get<Session>(session_name);
-    std::set<const Component*> objs;
+    std::set<const ResourceBase*> objs;
     for (auto comp: comps) {
-      auto obj=const_cast<Configuration&>(db).get<Component>(comp);
+      auto obj=const_cast<Configuration&>(db).get<ResourceBase>(comp);
       objs.insert(obj);
     }
     session->set_disabled(objs);
@@ -71,12 +71,12 @@ namespace dunedaq::confmodel::python {
   bool component_disabled(const Configuration& db, const std::string& session_id, const std::string& component_id) {
     try {
       ConfigObject object;
-      const_cast<Configuration&>(db).get("Component", component_id, object);
+      const_cast<Configuration&>(db).get("ResourceBase", component_id, object);
     }
     catch (conffwk::NotFound& except) {
       return false;
     }
-    const dunedaq::confmodel::Component* component_ptr = const_cast<Configuration&>(db).get<dunedaq::confmodel::Component>(component_id);
+    const dunedaq::confmodel::ResourceBase* component_ptr = const_cast<Configuration&>(db).get<dunedaq::confmodel::ResourceBase>(component_id);
     const dunedaq::confmodel::Session* session_ptr = const_cast<Configuration&>(db).get<dunedaq::confmodel::Session>(session_id);
 
     return component_ptr->disabled(*session_ptr);
@@ -86,10 +86,10 @@ namespace dunedaq::confmodel::python {
   std::vector<std::vector<ObjectLocator>> component_get_parents(const Configuration& db,
                                                                 const std::string& session_id,
                                                                 const std::string& component_id) {
-    const dunedaq::confmodel::Component* component_ptr = const_cast<Configuration&>(db).get<dunedaq::confmodel::Component>(component_id);
+    const dunedaq::confmodel::ResourceBase* component_ptr = const_cast<Configuration&>(db).get<dunedaq::confmodel::ResourceBase>(component_id);
     const dunedaq::confmodel::Session* session_ptr = const_cast<Configuration&>(db).get<dunedaq::confmodel::Session>(session_id);
 
-    std::list<std::vector<const dunedaq::confmodel::Component*>> parents;
+    std::list<std::vector<const dunedaq::confmodel::ResourceBase*>> parents;
     std::vector<std::vector<ObjectLocator>> parent_ids;
 
     component_ptr->get_parents(*session_ptr, parents);
@@ -141,10 +141,10 @@ register_dal_methods(py::module& m)
 
   m.def("session_get_all_applications", &session_get_all_applications, "Get list of ALL applications (regardless of enabled/disabled state) in the requested session");
   m.def("session_get_enabled_applications", &session_get_enabled_applications, "Get list of enabled applications in the requested session");
-  m.def("session_set_disabled", &session_set_disabled, "Temporarily disable Components in the requested session");
+  m.def("session_set_disabled", &session_set_disabled, "Temporarily disable ResourceBases in the requested session");
 
-  m.def("component_disabled", &component_disabled, "Determine if a Component-derived object (e.g. a Segment) has been disabled");
-  m.def("component_get_parents", &component_get_parents, "Get the Component-derived class instances of the parent(s) of the Component-derived object in question");
+  m.def("component_disabled", &component_disabled, "Determine if a ResourceBase-derived object (e.g. a Segment) has been disabled");
+  m.def("component_get_parents", &component_get_parents, "Get the ResourceBase-derived class instances of the parent(s) of the ResourceBase-derived object in question");
   m.def("daqapp_get_used_resources", &daq_application_get_used_hostresources, "Get list of HostResources used by DAQApplication");
   m.def("daq_application_construct_commandline_parameters", &daq_application_construct_commandline_parameters, "Get a version of the command line agruments parsed");
   m.def("rc_application_construct_commandline_parameters", &rc_application_construct_commandline_parameters, "Get a version of the command line agruments parsed");

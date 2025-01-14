@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="us-ascii"?>
+<?xml version="1.0" encoding="ASCII"?>
 
 <!-- oks-schema version 2.2 -->
 
@@ -80,7 +80,7 @@
 
 <oks-schema>
 
-<info name="" type="" num-of-items="49" oks-format="schema" oks-version="862f2957270" created-by="jcfree" created-on="mu2edaq13.fnal.gov" creation-time="20230123T223700" last-modified-by="eflumerf" last-modified-on="ironvirt9.mshome.net" last-modification-time="20241009T202839"/>
+<info name="" type="" num-of-items="50" oks-format="schema" oks-version="862f2957270" created-by="jcfree" created-on="mu2edaq13.fnal.gov" creation-time="20230123T223700" last-modified-by="gjc" last-modified-on="latitude" last-modification-time="20250114T140712"/>
 
  <class name="ActionPlan" description="A set of parallel steps for an application to carry out a command">
   <attribute name="execution_policy" description="How the application should execute steps of the action plan" type="enum" range="modules-in-parallel,modules-in-series" init-value="modules-in-parallel"/>
@@ -91,22 +91,13 @@
  <class name="Application" description="A software executable" is-abstract="yes">
   <attribute name="application_name" description="Name of the application binary to run." type="string" is-not-null="yes"/>
   <attribute name="commandline_parameters" description="command line parameters to add when starting the application" type="string" is-multi-value="yes"/>
-  <attribute name="log_path" description="Where the applications, controllers and infrastructure applications stdout/err go. This take precedence over the Session's log_path. If none of them is set, PWD is used." type="string" is-not-null="no"/>
+  <attribute name="log_path" description="Where the applications, controllers and infrastructure applications stdout/err go. This take precedence over the Session&apos;s log_path. If none of them is set, PWD is used." type="string"/>
   <relationship name="application_environment" description="Define process environment for this application." class-type="VariableBase" low-cc="zero" high-cc="many" is-composite="no" is-exclusive="no" is-dependent="no"/>
   <relationship name="runs_on" description="VirtualHost to run this application on" class-type="VirtualHost" low-cc="one" high-cc="one" is-composite="yes" is-exclusive="no" is-dependent="yes"/>
   <relationship name="exposes_service" description="Services exposed i.e. provided by this application" class-type="Service" low-cc="zero" high-cc="many" is-composite="yes" is-exclusive="no" is-dependent="yes"/>
   <relationship name="opmon_conf" description="description of the monitoring behaviour in the application" class-type="OpMonConf" low-cc="one" high-cc="one" is-composite="no" is-exclusive="no" is-dependent="no"/>
   <method name="parse_commandline_parameters" description="Get the CLA for the application">
    <method-implementation language="c++" prototype=" const std::vector&lt;std::string&gt; parse_commandline_parameters() const" body=""/>
-  </method>
- </class>
-
- <class name="Component" description="Abstract base class for Segment and Resource classes. It is only used to allow objects of derived classes to be put into list of disabled items. For more information read https://twiki.cern.ch/twiki/bin/viewauth/Atlas/DaqHltDal#3_4_Resource_Classes" is-abstract="yes">
-  <method name="get_parents" description="The algorithm calculates a vector of segments which are parents of given segment.&#xA;If the segment has parents referenced by the partition object, then:&#xA;- in case of C++ it fills the parents parameter; otherwise it throws {@link NotFoundException} exception">
-   <method-implementation language="c++" prototype="void get_parents(const dunedaq::confmodel::Session&amp; session, std::list&lt; std::vector&lt;const dunedaq::confmodel::Component *&gt; &gt;&amp; parents) const" body=""/>
-  </method>
-  <method name="disabled" description="The algorithm checks if the segment / resource is disabled in the partition that uses it.&#xA;@param partition      partition object containing this resource or segment&#xA;">
-   <method-implementation language="c++" prototype="bool disabled(const dunedaq::confmodel::Session&amp; session) const" body=""/>
   </method>
  </class>
 
@@ -125,6 +116,13 @@
   <attribute name="interval_ms" description="Interval between publishes and polls of connectivity service information" type="u32" init-value="2000" is-not-null="yes"/>
   <attribute name="host" description="Connectivity service Host" type="string" init-value="localhost" is-not-null="yes"/>
   <relationship name="service" description="Connectivity service Service definition" class-type="Service" low-cc="one" high-cc="one" is-composite="no" is-exclusive="no" is-dependent="no"/>
+ </class>
+
+ <class name="CustomResourceSet">
+  <superclass name="ResourceBase"/>
+  <method name="get_contains" description="Return list of all Resources contained in this set">
+   <method-implementation language="c++" prototype="virtual std::vector&lt;const ResourceBase*&gt; get_contains() const" body=""/>
+  </method>
  </class>
 
  <class name="DaqApplication">
@@ -164,7 +162,25 @@
  </class>
 
  <class name="DetDataSender" is-abstract="yes">
-  <superclass name="ResourceSetAND"/>
+  <superclass name="CustomResourceSet"/>
+  <relationship name="streams" class-type="DetectorStream" low-cc="one" high-cc="many" is-composite="yes" is-exclusive="yes" is-dependent="yes"/>
+  <method name="get_contains" description="">
+   <method-implementation language="c++" prototype="virtual std::vector&lt;const ResourceBase*&gt; get_contains() const override" body=""/>
+  </method>
+  <method name="disabled" description="">
+   <method-implementation language="c++" prototype="virtual bool disabled(const dunedaq::confmodel::Session&amp; session) const override" body=""/>
+  </method>
+ </class>
+
+ <class name="DetSenderSet">
+  <superclass name="CustomResourceSet"/>
+  <relationship name="senders" class-type="DetDataSender" low-cc="one" high-cc="many" is-composite="yes" is-exclusive="yes" is-dependent="yes"/>
+  <method name="get_contains" description="">
+   <method-implementation language="c++" prototype="virtual std::vector&lt;const ResourceBase*&gt; get_contains() const override" body=""/>
+  </method>
+  <method name="disabled" description="">
+   <method-implementation language="c++" prototype="virtual bool disabled(const dunedaq::confmodel::Session&amp; session) const override" body=""/>
+  </method>
  </class>
 
  <class name="DetectorConfig">
@@ -181,15 +197,17 @@
  </class>
 
  <class name="DetectorToDaqConnection">
-  <superclass name="ResourceSetOR"/>
-  <method name="get_senders" description="">
-   <method-implementation language="c++" prototype="std::vector&lt;const confmodel::DetDataSender*&gt; get_senders() const" body=""/>
-  </method>
-  <method name="get_receiver" description="">
-   <method-implementation language="c++" prototype="const confmodel::DetDataReceiver* get_receiver() const" body=""/>
-  </method>
+  <superclass name="CustomResourceSet"/>
+  <relationship name="senders" class-type="DetSenderSet" low-cc="one" high-cc="one" is-composite="yes" is-exclusive="yes" is-dependent="yes"/>
+  <relationship name="receiver" class-type="DetDataReceiver" low-cc="one" high-cc="one" is-composite="yes" is-exclusive="yes" is-dependent="yes"/>
   <method name="get_streams" description="">
    <method-implementation language="c++" prototype="std::vector&lt;const confmodel::DetectorStream*&gt; get_streams() const" body=""/>
+  </method>
+  <method name="disabled" description="">
+   <method-implementation language="c++" prototype="bool disabled(const dunedaq::confmodel::Session&amp; session) const override" body=""/>
+  </method>
+  <method name="get_contains" description="">
+   <method-implementation language="c++" prototype="virtual std::vector&lt;const ResourceBase*&gt; get_contains() const override" body=""/>
   </method>
  </class>
 
@@ -324,7 +342,12 @@
  </class>
 
  <class name="ResourceBase">
-  <superclass name="Component"/>
+  <method name="get_parents" description="The algorithm calculates a vector of segments which are parents of given segment.&#xA;If the segment has parents referenced by the partition object, then:&#xA;- in case of C++ it fills the parents parameter; otherwise it throws {@link NotFoundException} exception">
+   <method-implementation language="c++" prototype="void get_parents(const dunedaq::confmodel::Session&amp; session, std::list&lt; std::vector&lt;const dunedaq::confmodel::ResourceBase *&gt; &gt;&amp; parents) const" body=""/>
+  </method>
+  <method name="disabled" description="The algorithm checks if the segment / resource is disabled in the partition that uses it.&#xA;@param partition      partition object containing this resource or segment&#xA;">
+   <method-implementation language="c++" prototype="virtual bool disabled(const dunedaq::confmodel::Session&amp; session) const" body=""/>
+  </method>
  </class>
 
  <class name="ResourceSet">
@@ -360,6 +383,7 @@
   <attribute name="data_rate_slowdown_factor" description="&quot;Factor by which to suppress data generation." type="u32" init-value="1" is-not-null="yes"/>
   <attribute name="rte_script" description="Path to a script for setting up the runtime environment for DAQ applications" type="string"/>
   <attribute name="controller_log_level" description="Log level to use for drunc controllers" type="enum" range="CRITICAL,ERROR,WARNING,INFO,DEBUG" init-value="INFO" is-not-null="yes"/>
+  <attribute name="log_path" description="Where the applications, controllers and infrastructure applications stdout/err go. This is overwritten by the Application&apos;s log_path. If none of them is set, PWD is used." type="string"/>
   <relationship name="connectivity_service" description="Configuration for the Connectivity Service lookups" class-type="ConnectivityService" low-cc="zero" high-cc="one" is-composite="no" is-exclusive="no" is-dependent="no"/>
   <relationship name="environment" description="Define process environment for any application run in given session." class-type="VariableBase" low-cc="zero" high-cc="many" is-composite="no" is-exclusive="no" is-dependent="no"/>
   <relationship name="disabled" description="Resources that should not participate in the current run" class-type="ResourceBase" low-cc="zero" high-cc="many" is-composite="yes" is-exclusive="no" is-dependent="yes"/>
@@ -367,18 +391,17 @@
   <relationship name="infrastructure_applications" class-type="Application" low-cc="zero" high-cc="many" is-composite="yes" is-exclusive="no" is-dependent="yes"/>
   <relationship name="detector_configuration" class-type="DetectorConfig" low-cc="one" high-cc="one" is-composite="no" is-exclusive="no" is-dependent="no"/>
   <relationship name="opmon_uri" description="Configuration for the OpMon facilities used across the session" class-type="OpMonURI" low-cc="one" high-cc="one" is-composite="yes" is-exclusive="no" is-dependent="yes"/>
-  <attribute name="log_path" description="Where the applications, controllers and infrastructure applications stdout/err go. This is overwritten by the Application's log_path. If none of them is set, PWD is used." type="string" is-not-null="no"/>
   <method name="get_all_applications" description="Returns applications defined in the Session and all of its Segments.">
    <method-implementation language="c++" prototype="std::vector&lt;const dunedaq::confmodel::Application *&gt; get_all_applications() const" body=""/>
   </method>
   <method name="get_enabled_applications" description="Returns all enabled applications defined in the Session and all of its Segments.">
    <method-implementation language="c++" prototype="std::vector&lt;const dunedaq::confmodel::Application *&gt; get_enabled_applications() const" body=""/>
   </method>
-  <method name="set_disabled" description="In addition to persistently disabled components, dynamically disable these components. It will be taken into account by disabled() algorithm of Component class. This information is not committed to the database and will be overwritten by next set_disabled() call or erased by any config action (DB load, unload, reload).">
-   <method-implementation language="c++" prototype="void set_disabled(const std::set&lt;const dunedaq::confmodel::Component *&gt;&amp; objs) const" body="BEGIN_PRIVATE_SECTION&#xA;friend class DisabledComponents;&#xA;friend class Component;&#xA;mutable dunedaq::confmodel::DisabledComponents m_disabled_components; &#xA;END_PRIVATE_SECTION&#xA;BEGIN_MEMBER_INITIALIZER_LIST&#xA;m_disabled_components(p_registry.configuration(),this)&#xA;END_MEMBER_INITIALIZER_LIST&#xA;BEGIN_HEADER_PROLOGUE&#xA;#include &quot;confmodel/disabled-components.hpp&quot;&#xA;END_HEADER_PROLOGUE"/>
+  <method name="set_disabled" description="In addition to persistently disabled components, dynamically disable these components. It will be taken into account by disabled() algorithm of ResourceBase class. This information is not committed to the database and will be overwritten by next set_disabled() call or erased by any config action (DB load, unload, reload).">
+   <method-implementation language="c++" prototype="void set_disabled(const std::set&lt;const dunedaq::confmodel::ResourceBase *&gt;&amp; objs) const" body="BEGIN_PRIVATE_SECTION&#xA;friend class DisabledResources;&#xA;friend class ResourceBase;&#xA;mutable dunedaq::confmodel::DisabledResources m_disabled_components; &#xA;END_PRIVATE_SECTION&#xA;BEGIN_MEMBER_INITIALIZER_LIST&#xA;m_disabled_components(p_registry.configuration(),this)&#xA;END_MEMBER_INITIALIZER_LIST&#xA;BEGIN_HEADER_PROLOGUE&#xA;#include &quot;confmodel/disabled-components.hpp&quot;&#xA;END_HEADER_PROLOGUE"/>
   </method>
-  <method name="set_enabled" description="Dynamically enable these persistently disabled components. It will be taken into account by disabled() algorithm of the Component class. This information is not committed to the database and will be overwritten by next set_enabled() call or erased by any config action (DB load, unload, reload).">
-   <method-implementation language="c++" prototype="void set_enabled(const std::set&lt;const dunedaq::confmodel::Component *&gt;&amp; objs) const" body=""/>
+  <method name="set_enabled" description="Dynamically enable these persistently disabled components. It will be taken into account by disabled() algorithm of the ResourceBase class. This information is not committed to the database and will be overwritten by next set_enabled() call or erased by any config action (DB load, unload, reload).">
+   <method-implementation language="c++" prototype="void set_enabled(const std::set&lt;const dunedaq::confmodel::ResourceBase *&gt;&amp; objs) const" body=""/>
   </method>
  </class>
 

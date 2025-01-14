@@ -14,7 +14,7 @@
 using namespace dunedaq::conffwk;
 using namespace dunedaq::confmodel;
 
-DisabledComponents::DisabledComponents(Configuration& db,
+DisabledResources::DisabledResources(Configuration& db,
  Session* session) :
   m_db(db),
   m_session(session),
@@ -25,42 +25,42 @@ DisabledComponents::DisabledComponents(Configuration& db,
   m_db.add_action(this);
 }
 
-DisabledComponents::~DisabledComponents()
+DisabledResources::~DisabledResources()
 {
   TLOG_DEBUG(2) <<  "destroy the object " << (void *)this ;
   m_db.remove_action(this);
 }
 
 void
-DisabledComponents::notify(std::vector<ConfigurationChange *>& /*changes*/) noexcept
+DisabledResources::notify(std::vector<ConfigurationChange *>& /*changes*/) noexcept
 {
   TLOG_DEBUG(2) <<  "reset session components because of notification callback on object " << (void *)this ;
   __clear();
 }
 
 void
-DisabledComponents::load() noexcept
+DisabledResources::load() noexcept
 {
   TLOG_DEBUG(2) <<  "reset session components because of configuration load on object " << (void *)this ;
   __clear();
 }
 
 void
-DisabledComponents::unload() noexcept
+DisabledResources::unload() noexcept
 {
   TLOG_DEBUG(2) <<  "reset session components because of configuration unload on object " << (void *)this ;
   __clear();
 }
 
 void
-DisabledComponents::update(const ConfigObject& obj, const std::string& name) noexcept
+DisabledResources::update(const ConfigObject& obj, const std::string& name) noexcept
 {
   TLOG_DEBUG(2) <<  "reset session components because of configuration update (obj = " << obj << ", name = \'" << name << "\') on object " << (void *)this ;
   __clear();
 }
 
 void
-DisabledComponents::reset() noexcept
+DisabledResources::reset() noexcept
 {
   TLOG_DEBUG(2) <<  "reset disabled by explicit user call" ;
   m_disabled.clear(); // do not clear s_user_disabled && s_user_enabled !!!
@@ -68,7 +68,7 @@ DisabledComponents::reset() noexcept
 
 
 void
-DisabledComponents::disable_children(const ResourceSet& rs)
+DisabledResources::disable_children(const ResourceSet& rs)
 {
   for (auto & res : rs.get_contains()) {
     disable(*res);
@@ -79,10 +79,10 @@ DisabledComponents::disable_children(const ResourceSet& rs)
 }
 
 void
-DisabledComponents::disable_children(const Segment& segment)
+DisabledResources::disable_children(const Segment& segment)
 {
   for (auto & app : segment.get_applications()) {
-    auto res = app->cast<Component>();
+    auto res = app->cast<ResourceBase>();
     if (res) {
       disable(*res);
     }
@@ -95,7 +95,7 @@ DisabledComponents::disable_children(const Segment& segment)
 }
 
 void
-Session::set_disabled(const std::set<const Component *>& objs) const
+Session::set_disabled(const std::set<const ResourceBase *>& objs) const
 {
   m_disabled_components.m_user_disabled.clear();
 
@@ -108,7 +108,7 @@ Session::set_disabled(const std::set<const Component *>& objs) const
 }
 
 void
-Session::set_enabled(const std::set<const Component *>& objs) const
+Session::set_enabled(const std::set<const ResourceBase *>& objs) const
 {
   m_disabled_components.m_user_enabled.clear();
 
@@ -221,7 +221,7 @@ static void fill(
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 bool
-Component::disabled(const Session& session) const
+ResourceBase::disabled(const Session& session) const
 {
   TLOG_DEBUG( 6) << "Session UID: " << session.UID() << " this->UID()=" << UID();
   // fill disabled (e.g. after session changes)
@@ -242,7 +242,7 @@ Component::disabled(const Session& session) const
 
       // calculate explicitly and implicitly (nested) disabled components
       {
-        std::vector<const Component *> vector_of_disabled;
+        std::vector<const ResourceBase *> vector_of_disabled;
         vector_of_disabled.reserve(session.get_disabled().size() + session.m_disabled_components.m_user_disabled.size());
 
         // add user disabled components, if any
@@ -343,7 +343,7 @@ Component::disabled(const Session& session) const
 }
 
 unsigned long
-DisabledComponents::get_num_of_slr_resources(const Session& session)
+DisabledResources::get_num_of_slr_resources(const Session& session)
 {
   return (session.m_disabled_components.m_num_of_slr_enabled_resources + session.m_disabled_components.m_num_of_slr_disabled_resources);
 }

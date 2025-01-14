@@ -7,7 +7,7 @@
 #include "conffwk/Configuration.hpp"
 #include "conffwk/ConfigAction.hpp"
 
-#include "confmodel/Component.hpp"
+#include "confmodel/ResourceBase.hpp"
 
 namespace dunedaq::confmodel {
 
@@ -15,11 +15,11 @@ namespace dunedaq::confmodel {
     class ResourceSet;
     // class Segment;
 
-    class DisabledComponents : public dunedaq::conffwk::ConfigAction
+    class DisabledResources : public dunedaq::conffwk::ConfigAction
     {
 
       friend class Session;
-      friend class Component;
+      friend class ResourceBase;
 
     private:
 
@@ -39,8 +39,8 @@ namespace dunedaq::confmodel {
       unsigned long m_num_of_slr_disabled_resources;
 
       std::set<const std::string *, SortStringPtr> m_disabled;
-      std::set<const dunedaq::confmodel::Component *> m_user_disabled;
-      std::set<const dunedaq::confmodel::Component *> m_user_enabled;
+      std::set<const ResourceBase *> m_user_disabled;
+      std::set<const ResourceBase *> m_user_enabled;
 
       void
       __clear() noexcept
@@ -54,10 +54,10 @@ namespace dunedaq::confmodel {
 
     public:
 
-      DisabledComponents(dunedaq::conffwk::Configuration& db, Session* session);
+      DisabledResources(dunedaq::conffwk::Configuration& db, Session* session);
 
       virtual
-      ~DisabledComponents();
+      ~DisabledResources();
 
       void
       notify(std::vector<dunedaq::conffwk::ConfigurationChange *>& /*changes*/) noexcept;
@@ -81,24 +81,24 @@ namespace dunedaq::confmodel {
       }
 
       void
-      disable(const dunedaq::confmodel::Component& c)
+      disable(const ResourceBase& c)
       {
         m_disabled.insert(&c.UID());
       }
 
       bool
-      is_enabled(const dunedaq::confmodel::Component* c) {
+      is_enabled(const ResourceBase* c) {
         return (m_disabled.find(&c->UID()) == m_disabled.end());
       }
 
       void
-      disable_children(const dunedaq::confmodel::ResourceSet&);
+      disable_children(const ResourceSet&);
 
       void
-      disable_children(const dunedaq::confmodel::Segment&);
+      disable_children(const Segment&);
 
       static unsigned long
-      get_num_of_slr_resources(const dunedaq::confmodel::Session& p);
+      get_num_of_slr_resources(const Session& p);
 
     };
 } // namespace dunedaq::confmodel
