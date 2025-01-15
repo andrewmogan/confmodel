@@ -1,4 +1,5 @@
 #include "confmodel/Application.hpp"
+#include "confmodel/CustomResourceSet.hpp"
 #include "confmodel/ResourceSet.hpp"
 #include "confmodel/ResourceSetAND.hpp"
 #include "confmodel/ResourceSetOR.hpp"
@@ -140,26 +141,26 @@ static void fill(
   const ResourceSet& rs,
   std::vector<const ResourceSetOR *>& rs_or,
   std::vector<const ResourceSetAND *>& rs_and,
+  std::vector<const CustomResourceSet*>& rs_custom,
   TestCircularDependency& cd_fuse
 )
 {
-  if (const ResourceSetAND * r1 = rs.cast<ResourceSetAND>())
-    {
-      rs_and.push_back(r1);
+  TLOG_DEBUG(6) << "rs.UID=" << rs.UID() << ", class=" << rs.class_name();
+  if (const ResourceSetAND * r1 = rs.cast<ResourceSetAND>()) {
+    rs_and.push_back(r1);
+  }
+  else if (const ResourceSetOR * r2 = rs.cast<ResourceSetOR>()) {
+    rs_or.push_back(r2);
+  }
+  else if (auto r3 = rs.cast<CustomResourceSet>()) {
+    rs_custom.push_back(r3);
+  }
+  for (auto & res : rs.get_contains()) {
+    AddTestOnCircularDependency add_fuse_test(cd_fuse, res);
+    if (const ResourceSet * rs2 = res->cast<ResourceSet>()) {
+      fill(*rs2, rs_or, rs_and, rs_custom, cd_fuse);
     }
-  else if (const ResourceSetOR * r2 = rs.cast<ResourceSetOR>())
-    {
-      rs_or.push_back(r2);
-    }
-
-  for (auto & i : rs.get_contains())
-    {
-      AddTestOnCircularDependency add_fuse_test(cd_fuse, i);
-      if (const ResourceSet * rs2 = i->cast<ResourceSet>())
-        {
-          fill(*rs2, rs_or, rs_and, cd_fuse);
-        }
-    }
+  }
 }
 
 
@@ -169,20 +170,21 @@ static void fill(
   const Segment& s,
   std::vector<const ResourceSetOR *>& rs_or,
   std::vector<const ResourceSetAND *>& rs_and,
+  std::vector<const CustomResourceSet*>& rs_custom,
   TestCircularDependency& cd_fuse
 )
 {
   for (auto & app : s.get_applications()) {
     AddTestOnCircularDependency add_fuse_test(cd_fuse, app);
     if (const ResourceSet * rs = app->cast<ResourceSet>()) {
-      fill(*rs, rs_or, rs_and, cd_fuse);
+      fill(*rs, rs_or, rs_and, rs_custom, cd_fuse);
     }
   }
 
   for (auto & seg : s.get_segments()) {
     TLOG_DEBUG(6) << "Filling segment " << seg->UID();
     AddTestOnCircularDependency add_fuse_test(cd_fuse, seg);
-    fill(*seg, rs_or, rs_and, cd_fuse);
+    fill(*seg, rs_or, rs_and, rs_custom, cd_fuse);
   }
 }
 
@@ -193,6 +195,7 @@ static void fill(
   const Session& session,
   std::vector<const ResourceSetOR *>& rs_or,
   std::vector<const ResourceSetAND *>& rs_and,
+  std::vector<const CustomResourceSet*>& rs_custom,
   TestCircularDependency& cd_fuse
 )
 {
@@ -200,14 +203,14 @@ static void fill(
   if (const OnlineSegment * onlseg = p.get_OnlineInfrastructure())
     {
       AddTestOnCircularDependency add_fuse_test(cd_fuse, onlseg);
-      fill(*onlseg, rs_or, rs_and, cd_fuse);
+      fill(*onlseg, rs_or, rs_and, rs_custom, cd_fuse);
 
       // NOTE: normally application may not be ResourceSet, but for some "exotic" cases put this code
       for (auto &a : p.get_OnlineInfrastructureApplications())
         {
           if (const ResourceSet * rs = a->cast<ResourceSet>())
             {
-              fill(*rs, rs_or, rs_and, cd_fuse);
+              fill(*rs, rs_or, rs_and, rs_custom, cd_fuse);
             }
         }
     }
@@ -215,7 +218,7 @@ static void fill(
 
   auto seg = session.get_segment();
   AddTestOnCircularDependency add_fuse_test(cd_fuse, seg);
-  fill(*seg, rs_or, rs_and, cd_fuse);
+  fill(*seg, rs_or, rs_and, rs_custom, cd_fuse);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -238,7 +241,8 @@ ResourceBase::disabled(const Session& session) const
       TestCircularDependency cd_fuse("component \'is-disabled\' status", &session);
       std::vector<const ResourceSetOR *> rs_or;
       std::vector<const ResourceSetAND *> rs_and;
-      fill(session, rs_or, rs_and, cd_fuse);
+      std::vector<const CustomResourceSet*> rs_custom;
+      fill(session, rs_or, rs_and, rs_custom, cd_fuse);
 
       // calculate explicitly and implicitly (nested) disabled components
       {
@@ -319,6 +323,17 @@ ResourceBase::disabled(const Session& session) const
                 session.m_disabled_components.disable(*j);
                 session.m_disabled_components.disable_children(*j);
               }
+            }
+          }
+        }
+
+        TLOG_DEBUG(6) <<  "Session has " << rs_custom.size() << " CustomResourceSets";
+        for (const auto& res_set : rs_custom) {
+          if (session.m_disabled_components.is_enabled(res_set)) {
+            if (res_set->disabled(session)) {
+                TLOG_DEBUG(6) <<  "disable custom resource-set- " << res_set->UID() << " because children are disabled" ;
+                session.m_disabled_components.disable(*res_set);
+                session.m_disabled_components.disable_children(*res_set);
             }
           }
         }

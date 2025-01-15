@@ -24,6 +24,7 @@
 #include "confmodel/RCApplication.hpp"
 #include "confmodel/Resource.hpp"
 #include "confmodel/ResourceBase.hpp"
+#include "confmodel/ResourceSet.hpp"
 #include "confmodel/ResourceSetAND.hpp"
 #include "confmodel/ResourceSetOR.hpp"
 #include "confmodel/Segment.hpp"
@@ -380,20 +381,23 @@ std::string OpMonURI::get_URI( const std::string & /* app */) const {
 }
 
 
-std::vector<const ResourceBase*> CustomResourceSet::get_contains() const {
+const std::vector<const ResourceBase*>& ResourceSet::get_contains() const {
   throw (BadConf(ERS_HERE,
-                 "No get_contains method defined for CustomResourceSet"));
+                 "No get_contains method defined for ResourceSet"));
 }
 
-std::vector<const ResourceBase*> DetSenderSet::get_contains() const {
-  std::vector<const ResourceBase*> contents;
-  for (auto sender: get_senders()) {
-    contents.push_back(dynamic_cast<const ResourceBase*>(sender));
+const std::vector<const ResourceBase*>& DetSenderSet::get_contains() const {
+  if (m_contents.empty()) {
+    std::lock_guard scoped_lock(m_mutex);
+    check_init();
+    for (auto sender: m_senders) {
+      m_contents.push_back(sender);
+    }
   }
-  return contents;
+  return m_contents;
 }
 bool DetSenderSet::disabled(const Session& session) const {
-  for (auto sender: get_senders()) {
+  for (auto sender: m_senders) {
     if (!sender->disabled(session)) {
       return false;
     }
@@ -402,15 +406,18 @@ bool DetSenderSet::disabled(const Session& session) const {
 }
 
 
-std::vector<const ResourceBase*> DetDataSender::get_contains() const {
-  std::vector<const ResourceBase*> contents;
-  for (auto stream: get_streams()) {
-    contents.push_back(dynamic_cast<const ResourceBase*>(stream));
+const std::vector<const ResourceBase*>& DetDataSender::get_contains() const {
+  if (m_contents.empty()) {
+    std::lock_guard scoped_lock(m_mutex);
+    check_init();
+    for (auto stream: m_streams) {
+      m_contents.push_back(dynamic_cast<const ResourceBase*>(stream));
+    }
   }
-  return contents;
+  return m_contents;
 }
 bool DetDataSender::disabled(const Session& session) const {
-  for (auto stream: get_streams()) {
+  for (auto stream: m_streams) {
     if (!stream->disabled(session)) {
       return false;
     }
@@ -419,11 +426,17 @@ bool DetDataSender::disabled(const Session& session) const {
 }
 
 
-std::vector<const ResourceBase*> DetectorToDaqConnection::get_contains() const {
-  std::vector<const ResourceBase*> contents;
-  contents.push_back(dynamic_cast<const ResourceBase*>(get_senders()));
-  contents.push_back(get_receiver());
-  return contents;
+const std::vector<const ResourceBase*>& DetectorToDaqConnection::get_contains() const {
+  TLOG_DBG(6) << "m_contents.size=" << m_contents.size()
+              << " m_senders=" << m_senders
+              << " m_receiver=" << m_receiver;
+  if (m_contents.empty()) {
+    std::lock_guard scoped_lock(m_mutex);
+    check_init();
+    m_contents.push_back(m_senders);
+    m_contents.push_back(m_receiver);
+  }
+  return m_contents;
 }
 
 bool DetectorToDaqConnection::disabled(const Session& session) const {
