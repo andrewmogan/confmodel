@@ -10,7 +10,6 @@
 
 #include "confmodel/Application.hpp"
 #include "confmodel/confmodelIssues.hpp"
-#include "confmodel/CustomResourceSet.hpp"
 #include "confmodel/DaqApplication.hpp"
 #include "confmodel/DaqModule.hpp"
 #include "confmodel/DetDataSender.hpp"

@@ -80,7 +80,7 @@
 
 <oks-schema>
 
-<info name="" type="" num-of-items="50" oks-format="schema" oks-version="862f2957270" created-by="jcfree" created-on="mu2edaq13.fnal.gov" creation-time="20230123T223700" last-modified-by="gjc" last-modified-on="latitude" last-modification-time="20250115T094652"/>
+<info name="" type="" num-of-items="49" oks-format="schema" oks-version="862f2957270" created-by="jcfree" created-on="mu2edaq13.fnal.gov" creation-time="20230123T223700" last-modified-by="gjc" last-modified-on="latitude" last-modification-time="20250115T153145"/>
 
  <class name="ActionPlan" description="A set of parallel steps for an application to carry out a command">
   <attribute name="execution_policy" description="How the application should execute steps of the action plan" type="enum" range="modules-in-parallel,modules-in-series" init-value="modules-in-parallel"/>
@@ -116,10 +116,6 @@
   <attribute name="interval_ms" description="Interval between publishes and polls of connectivity service information" type="u32" init-value="2000" is-not-null="yes"/>
   <attribute name="host" description="Connectivity service Host" type="string" init-value="localhost" is-not-null="yes"/>
   <relationship name="service" description="Connectivity service Service definition" class-type="Service" low-cc="one" high-cc="one" is-composite="no" is-exclusive="no" is-dependent="no"/>
- </class>
-
- <class name="CustomResourceSet">
-  <superclass name="ResourceSet"/>
  </class>
 
  <class name="DaqApplication">
@@ -159,7 +155,7 @@
  </class>
 
  <class name="DetDataSender" is-abstract="yes">
-  <superclass name="CustomResourceSet"/>
+  <superclass name="ResourceSet"/>
   <relationship name="streams" class-type="DetectorStream" low-cc="one" high-cc="many" is-composite="yes" is-exclusive="yes" is-dependent="yes"/>
   <method name="get_contains" description="">
    <method-implementation language="c++" prototype="virtual const std::vector&lt;const ResourceBase*&gt;&amp; get_contains() const override" body="BEGIN_PRIVATE_SECTION&#xA;mutable std::vector&lt;const ResourceBase*&gt; m_contents;&#xA;END_PRIVATE_SECTION"/>
@@ -170,7 +166,7 @@
  </class>
 
  <class name="DetSenderSet">
-  <superclass name="CustomResourceSet"/>
+  <superclass name="ResourceSet"/>
   <relationship name="senders" class-type="DetDataSender" low-cc="one" high-cc="many" is-composite="yes" is-exclusive="yes" is-dependent="yes"/>
   <method name="get_contains" description="">
    <method-implementation language="c++" prototype="virtual const std::vector&lt;const ResourceBase*&gt;&amp; get_contains() const override" body="BEGIN_PRIVATE_SECTION&#xA;mutable std::vector&lt;const ResourceBase*&gt; m_contents;&#xA;END_PRIVATE_SECTION"/>
@@ -194,7 +190,7 @@
  </class>
 
  <class name="DetectorToDaqConnection">
-  <superclass name="CustomResourceSet"/>
+  <superclass name="ResourceSet"/>
   <relationship name="senders" class-type="DetSenderSet" low-cc="one" high-cc="one" is-composite="yes" is-exclusive="yes" is-dependent="yes"/>
   <relationship name="receiver" class-type="DetDataReceiver" low-cc="one" high-cc="one" is-composite="yes" is-exclusive="yes" is-dependent="yes"/>
   <method name="get_streams" description="">

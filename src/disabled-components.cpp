@@ -1,5 +1,4 @@
 #include "confmodel/Application.hpp"
-#include "confmodel/CustomResourceSet.hpp"
 #include "confmodel/ResourceSet.hpp"
 #include "confmodel/ResourceSetAND.hpp"
 #include "confmodel/ResourceSetOR.hpp"
@@ -141,7 +140,7 @@ static void fill(
   const ResourceSet& rs,
   std::vector<const ResourceSetOR *>& rs_or,
   std::vector<const ResourceSetAND *>& rs_and,
-  std::vector<const CustomResourceSet*>& rs_custom,
+  std::vector<const ResourceSet*>& rs_custom,
   TestCircularDependency& cd_fuse
 )
 {
@@ -152,8 +151,8 @@ static void fill(
   else if (const ResourceSetOR * r2 = rs.cast<ResourceSetOR>()) {
     rs_or.push_back(r2);
   }
-  else if (auto r3 = rs.cast<CustomResourceSet>()) {
-    rs_custom.push_back(r3);
+  else {
+    rs_custom.push_back(&rs);
   }
   for (auto & res : rs.get_contains()) {
     AddTestOnCircularDependency add_fuse_test(cd_fuse, res);
@@ -170,7 +169,7 @@ static void fill(
   const Segment& s,
   std::vector<const ResourceSetOR *>& rs_or,
   std::vector<const ResourceSetAND *>& rs_and,
-  std::vector<const CustomResourceSet*>& rs_custom,
+  std::vector<const ResourceSet*>& rs_custom,
   TestCircularDependency& cd_fuse
 )
 {
@@ -195,7 +194,7 @@ static void fill(
   const Session& session,
   std::vector<const ResourceSetOR *>& rs_or,
   std::vector<const ResourceSetAND *>& rs_and,
-  std::vector<const CustomResourceSet*>& rs_custom,
+  std::vector<const ResourceSet*>& rs_custom,
   TestCircularDependency& cd_fuse
 )
 {
@@ -241,7 +240,7 @@ ResourceBase::disabled(const Session& session) const
       TestCircularDependency cd_fuse("component \'is-disabled\' status", &session);
       std::vector<const ResourceSetOR *> rs_or;
       std::vector<const ResourceSetAND *> rs_and;
-      std::vector<const CustomResourceSet*> rs_custom;
+      std::vector<const ResourceSet*> rs_custom;
       fill(session, rs_or, rs_and, rs_custom, cd_fuse);
 
       // calculate explicitly and implicitly (nested) disabled components
@@ -327,7 +326,7 @@ ResourceBase::disabled(const Session& session) const
           }
         }
 
-        TLOG_DEBUG(6) <<  "Session has " << rs_custom.size() << " CustomResourceSets";
+        TLOG_DEBUG(6) <<  "Session has " << rs_custom.size() << " custom ResourceSets";
         for (const auto& res_set : rs_custom) {
           if (session.m_disabled_components.is_enabled(res_set)) {
             if (res_set->disabled(session)) {
