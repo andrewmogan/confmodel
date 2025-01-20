@@ -70,7 +70,9 @@ DisabledResources::reset() noexcept
 void
 DisabledResources::disable_children(const ResourceSet& rs)
 {
+  TLOG_DEBUG(6) << "Disabling children of " << rs.UID();
   for (auto & res : rs.get_contains()) {
+    TLOG_DEBUG(6) << "Disabling child " << res->UID();
     disable(*res);
     if (const auto * rs2 = res->cast<ResourceSet>()) {
       disable_children(*rs2);
@@ -135,8 +137,8 @@ namespace dunedaq {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   // fill data from resource sets
-
-static void fill(
+namespace {
+void fill(
   const ResourceSet& rs,
   std::vector<const ResourceSetOR *>& rs_or,
   std::vector<const ResourceSetAND *>& rs_and,
@@ -162,35 +164,8 @@ static void fill(
   }
 }
 
-
-  // fill data from segments
-
-static void fill(
-  const Segment& s,
-  std::vector<const ResourceSetOR *>& rs_or,
-  std::vector<const ResourceSetAND *>& rs_and,
-  std::vector<const ResourceSet*>& rs_custom,
-  TestCircularDependency& cd_fuse
-)
-{
-  for (auto & app : s.get_applications()) {
-    AddTestOnCircularDependency add_fuse_test(cd_fuse, app);
-    if (const ResourceSet * rs = app->cast<ResourceSet>()) {
-      fill(*rs, rs_or, rs_and, rs_custom, cd_fuse);
-    }
-  }
-
-  for (auto & seg : s.get_segments()) {
-    TLOG_DEBUG(6) << "Filling segment " << seg->UID();
-    AddTestOnCircularDependency add_fuse_test(cd_fuse, seg);
-    fill(*seg, rs_or, rs_and, rs_custom, cd_fuse);
-  }
-}
-
-
   // fill data from session
-
-static void fill(
+void fill(
   const Session& session,
   std::vector<const ResourceSetOR *>& rs_or,
   std::vector<const ResourceSetAND *>& rs_and,
@@ -198,27 +173,11 @@ static void fill(
   TestCircularDependency& cd_fuse
 )
 {
-#if 0
-  if (const OnlineSegment * onlseg = p.get_OnlineInfrastructure())
-    {
-      AddTestOnCircularDependency add_fuse_test(cd_fuse, onlseg);
-      fill(*onlseg, rs_or, rs_and, rs_custom, cd_fuse);
-
-      // NOTE: normally application may not be ResourceSet, but for some "exotic" cases put this code
-      for (auto &a : p.get_OnlineInfrastructureApplications())
-        {
-          if (const ResourceSet * rs = a->cast<ResourceSet>())
-            {
-              fill(*rs, rs_or, rs_and, rs_custom, cd_fuse);
-            }
-        }
-    }
-#endif
-
   auto seg = session.get_segment();
   AddTestOnCircularDependency add_fuse_test(cd_fuse, seg);
   fill(*seg, rs_or, rs_and, rs_custom, cd_fuse);
 }
+} // namespace
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

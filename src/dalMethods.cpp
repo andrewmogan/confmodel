@@ -396,6 +396,12 @@ const std::vector<const ResourceBase*>& DetSenderSet::get_contains() const {
   return m_contents;
 }
 bool DetSenderSet::disabled(const Session& session) const {
+  for (auto res: session.get_disabled()) {
+    if (res == this) {
+      TLOG_DBG(6) << UID() << " is directly disabled";
+      return true;
+    }
+  }
   for (auto sender: m_senders) {
     if (!sender->disabled(session)) {
       return false;
@@ -416,6 +422,12 @@ const std::vector<const ResourceBase*>& DetDataSender::get_contains() const {
   return m_contents;
 }
 bool DetDataSender::disabled(const Session& session) const {
+  for (auto res: session.get_disabled()) {
+    if (res == this) {
+      TLOG_DBG(6) << UID() << " is directly disabled";
+      return true;
+    }
+  }
   for (auto stream: m_streams) {
     if (!stream->disabled(session)) {
       return false;
@@ -438,13 +450,64 @@ const std::vector<const ResourceBase*>& DetectorToDaqConnection::get_contains() 
   return m_contents;
 }
 
-bool DetectorToDaqConnection::disabled(const Session& session) const {
+bool
+DetectorToDaqConnection::disabled(const Session& session) const {
+  for (auto res: session.get_disabled()) {
+    if (res == this) {
+      TLOG_DBG(6) << UID() << " is directly disabled";
+      return true;
+    }
+  }
   TLOG_DBG(6) << "receiver disabled=" << get_receiver()->disabled(session)
          << " senders disabled=" << get_senders()->disabled(session);
   if (get_receiver()->disabled(session) || get_senders()->disabled(session)) {
     return true;
   }
   return false;
+}
+
+const std::vector<const ResourceBase*>&
+Segment::get_contains() const {
+  TLOG_DBG(6) << "entered: UID=" << UID() << " m_contents.size=" << m_contents.size();
+  if (m_contents.empty()) {
+    std::lock_guard scoped_lock(m_mutex);
+    check_init();
+    for (auto app: m_applications) {
+      TLOG_DBG(6) << "Checking " << app->UID();
+      auto res=app->cast<ResourceBase>();
+      if (res != nullptr) {
+        TLOG_DBG(6) << "Adding " << res->UID();
+        m_contents.push_back(res);
+      }
+    }
+    for (auto seg: m_segments) {
+      TLOG_DBG(6) << "Adding " << seg->UID();
+      m_contents.push_back(seg);
+    }
+  }
+  TLOG_DBG(6) << "Returning vector of " << m_contents.size() << " resources";
+  return m_contents;
+}
+
+bool Segment::disabled(const Session& session) const {
+  // Check that we're not explicitly disabled
+  for (auto res: session.get_disabled()) {
+    if (res == this) {
+      TLOG_DBG(6) << UID() << " is directly disabled";
+      return true;
+    }
+  }
+
+  // Check that not all our children are disabled
+  for (auto res: get_contains()) {
+    TLOG_DBG(6) << "Checking " << res->UID();
+    if (!res->disabled(session)) {
+      TLOG_DBG(6) << res->UID() << " is not disabled";
+      return false;
+    }
+  }
+  TLOG_DBG(6) << UID() << " is indirectly disabled";
+  return true;
 }
 
 } // namespace dunedaq::confmodel
