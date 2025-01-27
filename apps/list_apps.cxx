@@ -13,10 +13,11 @@
 #include <string>
 
 using namespace dunedaq;
+using namespace dunedaq::confmodel;
 
 
-void process_segment(const confmodel::Session* session,
-                     const confmodel::Segment* segment,
+void process_segment(const Session* session,
+                     const Segment* segment,
                      const std::set<std::string>& disabled_objects,
                      std::string spacer) {
   std::cout << spacer << "Segment " << segment->UID();
@@ -35,7 +36,7 @@ void process_segment(const confmodel::Session* session,
     bool disabled = segment_disabled;
     std::cout << spacer << "  Application: " << app->UID();
     if (!disabled) {
-      auto rset = app->cast<confmodel::ResourceSet>();
+      auto rset = app->cast<ResourceSet>();
       if (rset) {
         if (rset->disabled(*session)) {
           disabled = true;
@@ -65,7 +66,7 @@ void process_segment(const confmodel::Session* session,
     if (disabled) {
       std::cout << " <disabled "<< reason << ">";
     }
-    auto daqApp = app->cast<confmodel::DaqApplication>();
+    auto daqApp = app->cast<DaqApplication>();
     if (daqApp) {
       std::cout << " Modules:";
       for (auto mod : daqApp->get_modules()) {
@@ -111,8 +112,8 @@ int main(int argc, char* argv[]) {
 
   std::string separator{};
   for (const auto& sessionName : sessionList) {
-    const confmodel::Session* session;
-    session = confdb->get<confmodel::Session>(sessionName);
+    const Session* session;
+    session = confdb->get<Session>(sessionName);
     if (session==nullptr) {
       std::cerr << "Session " << sessionName << " not found in database\n";
       return -1;
@@ -132,4 +133,5 @@ int main(int argc, char* argv[]) {
     separator =
       "\n   ----------------------------------------------\n\n";
   }
+  delete confdb;
 }

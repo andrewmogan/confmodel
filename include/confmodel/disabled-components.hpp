@@ -1,21 +1,19 @@
 #ifndef DUNEDAQDAL_DISABLED_COMPONENTS_H
 #define DUNEDAQDAL_DISABLED_COMPONENTS_H
 
-#include <string>
-#include <vector>
-
-#include "conffwk/Configuration.hpp"
-#include "conffwk/ConfigAction.hpp"
-
 #include "confmodel/ResourceBase.hpp"
+
+#include <set>
+#include <string>
+
 
 namespace dunedaq::confmodel {
 
     class Session;
     class ResourceSet;
-    // class Segment;
+    class TestCircularDependency;
 
-    class DisabledResources : public dunedaq::conffwk::ConfigAction
+    class DisabledResources 
     {
 
       friend class Session;
@@ -23,56 +21,20 @@ namespace dunedaq::confmodel {
 
     private:
 
-      struct SortStringPtr
-      {
-        bool
-        operator()(const std::string * s1, const std::string * s2) const
-        {
-          return (*s1 < *s2);
-        }
-      };
+      std::set<std::string> m_disabled;
 
-      dunedaq::conffwk::Configuration& m_db;
-      Session* m_session;
-
-      unsigned long m_num_of_slr_enabled_resources;
-      unsigned long m_num_of_slr_disabled_resources;
-
-      std::set<const std::string *, SortStringPtr> m_disabled;
-      std::set<const ResourceBase *> m_user_disabled;
-      std::set<const ResourceBase *> m_user_enabled;
+      void fill(const ResourceSet& rs,
+                std::vector<const ResourceSet*>& all_resource_sets,
+                TestCircularDependency& cd_fuse);
 
       void
-      __clear() noexcept
+      disable(const ResourceBase& component)
       {
-        m_disabled.clear();
-        m_user_disabled.clear();
-        m_user_enabled.clear();
-        m_num_of_slr_enabled_resources = 0;
-        m_num_of_slr_disabled_resources = 0;
+        m_disabled.insert(component.UID());
       }
 
-    public:
-
-      DisabledResources(dunedaq::conffwk::Configuration& db, Session* session);
-
-      virtual
-      ~DisabledResources();
-
       void
-      notify(std::vector<dunedaq::conffwk::ConfigurationChange *>& /*changes*/) noexcept;
-
-      void
-      load() noexcept;
-
-      void
-      unload() noexcept;
-
-      void
-      update(const dunedaq::conffwk::ConfigObject& obj, const std::string& name) noexcept;
-
-      void
-      reset() noexcept;
+      disable_children(const ResourceSet&);
 
       size_t
       size() noexcept
@@ -80,25 +42,16 @@ namespace dunedaq::confmodel {
         return m_disabled.size();
       }
 
-      void
-      disable(const ResourceBase& c)
-      {
-        m_disabled.insert(&c.UID());
-      }
+    public:
+
+      explicit DisabledResources(Session& session);
+
+      ~DisabledResources() = default;
 
       bool
-      is_enabled(const ResourceBase* c) {
-        return (m_disabled.find(&c->UID()) == m_disabled.end());
+      is_enabled(const ResourceBase* component) {
+        return !m_disabled.contains(component->UID());
       }
-
-      void
-      disable_children(const ResourceSet&);
-
-      void
-      disable_children(const Segment&);
-
-      static unsigned long
-      get_num_of_slr_resources(const Session& p);
 
     };
 } // namespace dunedaq::confmodel

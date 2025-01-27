@@ -21,11 +21,8 @@
 #include "confmodel/OpMonURI.hpp"
 #include "confmodel/PhysicalHost.hpp"
 #include "confmodel/RCApplication.hpp"
-#include "confmodel/Resource.hpp"
 #include "confmodel/ResourceBase.hpp"
 #include "confmodel/ResourceSet.hpp"
-#include "confmodel/ResourceSetAND.hpp"
-#include "confmodel/ResourceSetOR.hpp"
 #include "confmodel/Segment.hpp"
 #include "confmodel/Session.hpp"
 #include "confmodel/Service.hpp"
@@ -42,17 +39,18 @@
 #include <set>
 #include <iostream>
 
-// Stolen from ATLAS dal package
 using namespace dunedaq::conffwk;
 
-namespace dunedaq::confmodel {
+
+// Stolen from ATLAS dal package
+namespace {
   /**
    *  Static function to calculate list of components
    *  from the root segment to the lowest component which
    *  the child object (a segment or a resource) belongs.
    */
 
-static void
+void
 make_parents_list(
     const ConfigObjectImpl * child,
     const dunedaq::confmodel::ResourceSet * resource_set,
@@ -79,9 +77,9 @@ make_parents_list(
   p_list.pop_back();
 }
 
-static void
+void
 make_parents_list(
-    const ConfigObjectImpl * child,
+    const dunedaq::conffwk::ConfigObjectImpl * child,
     const dunedaq::confmodel::Segment * segment,
     std::vector<const dunedaq::confmodel::ResourceBase *> & p_list,
     std::list<std::vector<const dunedaq::confmodel::ResourceBase *> >& out,
@@ -115,11 +113,11 @@ make_parents_list(
 }
 
 
-static void
+void
 check_segment(
     std::list< std::vector<const dunedaq::confmodel::ResourceBase *> >& out,
     const dunedaq::confmodel::Segment * segment,
-    const ConfigObjectImpl * child,
+    const dunedaq::conffwk::ConfigObjectImpl * child,
     bool is_segment,
     dunedaq::confmodel::TestCircularDependency& cd_fuse)
 {
@@ -132,18 +130,21 @@ check_segment(
   }
   make_parents_list(child, segment, compList, out, is_segment, cd_fuse);
 }
+} // namespace
+
+namespace dunedaq::confmodel {
 
 void
-dunedaq::confmodel::ResourceBase::get_parents(
-  const dunedaq::confmodel::Session& session,
-  std::list<std::vector<const dunedaq::confmodel::ResourceBase *>>& parents) const
+ResourceBase::get_parents(
+  const Session& session,
+  std::list<std::vector<const ResourceBase *>>& parents) const
 {
   const ConfigObjectImpl * obj_impl = config_object().implementation();
 
-  const bool is_segment = castable(dunedaq::confmodel::Segment::s_class_name);
+  const bool is_segment = castable(Segment::s_class_name);
 
   try {
-    dunedaq::confmodel::TestCircularDependency cd_fuse("component parents", &session);
+    TestCircularDependency cd_fuse("component parents", &session);
 
     // check session's segment
     check_segment(parents, session.get_segment(), obj_impl, is_segment,
@@ -161,15 +162,15 @@ dunedaq::confmodel::ResourceBase::get_parents(
 
 // ========================================================================
 
-  static std::vector<const Application*> getSegmentApps(const Segment* segment,
-                                                        const Session* session,
-                                                        bool enabled_only) {
+std::vector<const Application*>
+Session::getSegmentApps(const Segment* segment,
+                        bool enabled_only) const {
   std::vector<const Application*> apps;
   auto segapps = segment->get_applications();
   if (enabled_only) {
     for (auto app : segapps) {
       auto comp = app->cast<ResourceBase>();
-      if (comp == nullptr || !comp->disabled(*session)) {
+      if (comp == nullptr || !comp->disabled(*this)) {
         apps.insert(apps.end(), app);
       }
     }
@@ -178,8 +179,8 @@ dunedaq::confmodel::ResourceBase::get_parents(
     apps.swap(segapps);
   }
   for (auto seg : segment->get_segments()) {
-    if (!enabled_only || !seg->disabled(*session)) {
-      auto segapps = getSegmentApps(seg, session, enabled_only);
+    if (!enabled_only || !seg->disabled(*this)) {
+      auto segapps = getSegmentApps(seg, enabled_only);
       apps.insert(apps.end(), segapps.begin(),segapps.end());
     }
   }
@@ -189,7 +190,7 @@ dunedaq::confmodel::ResourceBase::get_parents(
 std::vector<const Application*>
 Session::get_all_applications() const {
   std::vector<const Application*> apps;
-  auto segapps = getSegmentApps(m_segment, this, false);
+  auto segapps = getSegmentApps(m_segment, false);
   apps.insert(apps.end(), segapps.begin(),segapps.end());
   return apps;
 }
@@ -197,7 +198,7 @@ Session::get_all_applications() const {
 std::vector<const Application*>
 Session::get_enabled_applications() const {
   std::vector<const Application*> apps;
-  auto segapps = getSegmentApps(m_segment, this, true);
+  auto segapps = getSegmentApps(m_segment, true);
   apps.insert(apps.end(), segapps.begin(),segapps.end());
   return apps;
 }
@@ -353,7 +354,6 @@ const std::vector<std::string> RCApplication::construct_commandline_parameters(
 
 
 std::vector<const confmodel::DetectorStream*> DetectorToDaqConnection::get_streams() const {
-
   std::vector<const confmodel::DetectorStream*> streams;
     // Loop over senders
   for (auto sender : this->get_senders()->get_senders()) {
@@ -379,10 +379,19 @@ std::string OpMonURI::get_URI( const std::string & /* app */) const {
   return "stdout://";  
 }
 
+bool ResourceBase::is_disabled(const std::set<std::string>& disabled_resources) const {
+  // throw (BadConf(ERS_HERE,
+  //                "No is_disabled method defined for Resource ", UID()));
+  if (disabled_resources.contains(UID())) {
+    return true;
+  }
+  std::cout << "No is_disabled method defined for Resource " << UID() << "\n";
+  return false;
+}
 
 const std::vector<const ResourceBase*>& ResourceSet::get_contains() const {
   throw (BadConf(ERS_HERE,
-                 "No get_contains method defined for ResourceSet"));
+                 "No get_contains method defined for ResourceSet ", UID()));
 }
 
 const std::vector<const ResourceBase*>& DetSenderSet::get_contains() const {
@@ -395,15 +404,14 @@ const std::vector<const ResourceBase*>& DetSenderSet::get_contains() const {
   }
   return m_contents;
 }
-bool DetSenderSet::disabled(const Session& session) const {
-  for (auto res: session.get_disabled()) {
-    if (res == this) {
-      TLOG_DBG(6) << UID() << " is directly disabled";
-      return true;
-    }
+
+
+bool DetSenderSet::is_disabled(const std::set<std::string>& disabled_resources) const {
+  if (disabled_resources.contains(UID())) {
+    return true;
   }
   for (auto sender: m_senders) {
-    if (!sender->disabled(session)) {
+    if (!sender->is_disabled(disabled_resources)) {
       return false;
     }
   }
@@ -421,21 +429,30 @@ const std::vector<const ResourceBase*>& DetDataSender::get_contains() const {
   }
   return m_contents;
 }
-bool DetDataSender::disabled(const Session& session) const {
-  for (auto res: session.get_disabled()) {
-    if (res == this) {
-      TLOG_DBG(6) << UID() << " is directly disabled";
-      return true;
-    }
+bool DetDataSender::is_disabled(const std::set<std::string>& disabled_resources) const {
+  if (disabled_resources.contains(UID())) {
+    return true;
   }
   for (auto stream: m_streams) {
-    if (!stream->disabled(session)) {
+    if (!stream->is_disabled(disabled_resources)) {
       return false;
     }
   }
   return true;
 }
 
+bool DetDataReceiver::is_disabled(const std::set<std::string>& disabled_resources) const {
+  if (disabled_resources.contains(UID())) {
+    return true;
+  }
+  return false;
+}
+bool DetectorStream::is_disabled(const std::set<std::string>& disabled_resources) const {
+  if (disabled_resources.contains(UID())) {
+    return true;
+  }
+  return false;
+}
 
 const std::vector<const ResourceBase*>& DetectorToDaqConnection::get_contains() const {
   TLOG_DBG(6) << "m_contents.size=" << m_contents.size()
@@ -451,16 +468,13 @@ const std::vector<const ResourceBase*>& DetectorToDaqConnection::get_contains() 
 }
 
 bool
-DetectorToDaqConnection::disabled(const Session& session) const {
-  for (auto res: session.get_disabled()) {
-    if (res == this) {
-      TLOG_DBG(6) << UID() << " is directly disabled";
-      return true;
-    }
+DetectorToDaqConnection::is_disabled(const std::set<std::string>& disabled_resources) const {
+  if (disabled_resources.contains(UID())) {
+    return true;
   }
-  TLOG_DBG(6) << "receiver disabled=" << get_receiver()->disabled(session)
-         << " senders disabled=" << get_senders()->disabled(session);
-  if (get_receiver()->disabled(session) || get_senders()->disabled(session)) {
+  TLOG_DBG(6) << "receiver disabled=" << get_receiver()->is_disabled(disabled_resources)
+              << " senders disabled=" << get_senders()->is_disabled(disabled_resources);
+  if (get_receiver()->is_disabled(disabled_resources) || get_senders()->is_disabled(disabled_resources)) {
     return true;
   }
   return false;
@@ -472,11 +486,12 @@ Segment::get_contains() const {
   if (m_contents.empty()) {
     std::lock_guard scoped_lock(m_mutex);
     check_init();
+
     for (auto app: m_applications) {
       TLOG_DBG(6) << "Checking " << app->UID();
-      auto res=app->cast<ResourceBase>();
+      auto res=app->cast<const ResourceBase>();
       if (res != nullptr) {
-        TLOG_DBG(6) << "Adding " << res->UID();
+        TLOG_DBG(6) << "Adding " << app->UID();
         m_contents.push_back(res);
       }
     }
@@ -489,19 +504,14 @@ Segment::get_contains() const {
   return m_contents;
 }
 
-bool Segment::disabled(const Session& session) const {
-  // Check that we're not explicitly disabled
-  for (auto res: session.get_disabled()) {
-    if (res == this) {
-      TLOG_DBG(6) << UID() << " is directly disabled";
-      return true;
-    }
+bool Segment::is_disabled(const std::set<std::string>& disabled_resources) const {
+  if (disabled_resources.contains(UID())) {
+    return true;
   }
-
   // Check that not all our children are disabled
   for (auto res: get_contains()) {
     TLOG_DBG(6) << "Checking " << res->UID();
-    if (!res->disabled(session)) {
+    if (!res->is_disabled(disabled_resources)) {
       TLOG_DBG(6) << res->UID() << " is not disabled";
       return false;
     }

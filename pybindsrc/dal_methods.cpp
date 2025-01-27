@@ -55,19 +55,6 @@ namespace dunedaq::confmodel::python {
     return apps;
   }
 
-  void
-  session_set_disabled(const Configuration& db,
-                       const std::string& session_name,
-                       const std::vector<std::string>& comps) {
-    auto session=const_cast<Configuration&>(db).get<Session>(session_name);
-    std::set<const ResourceBase*> objs;
-    for (auto comp: comps) {
-      auto obj=const_cast<Configuration&>(db).get<ResourceBase>(comp);
-      objs.insert(obj);
-    }
-    session->set_disabled(objs);
-  }
-
   bool component_disabled(const Configuration& db, const std::string& session_id, const std::string& component_id) {
     try {
       ConfigObject object;
@@ -141,7 +128,6 @@ register_dal_methods(py::module& m)
 
   m.def("session_get_all_applications", &session_get_all_applications, "Get list of ALL applications (regardless of enabled/disabled state) in the requested session");
   m.def("session_get_enabled_applications", &session_get_enabled_applications, "Get list of enabled applications in the requested session");
-  m.def("session_set_disabled", &session_set_disabled, "Temporarily disable ResourceBases in the requested session");
 
   m.def("component_disabled", &component_disabled, "Determine if a ResourceBase-derived object (e.g. a Segment) has been disabled");
   m.def("component_get_parents", &component_get_parents, "Get the ResourceBase-derived class instances of the parent(s) of the ResourceBase-derived object in question");

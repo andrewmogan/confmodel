@@ -1,5 +1,5 @@
 #include "conffwk/DalObject.hpp"
-
+#include "confmodel/confmodelIssues.hpp"
 #include "test_circular_dependency.hpp"
 
 void

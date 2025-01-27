@@ -5,7 +5,6 @@ find_package(daq-cmake REQUIRED)
 
 daq_setup_environment()
 
-find_package(okssystem REQUIRED)
 find_package(oksdalgen REQUIRED)
 find_package(ers REQUIRED)
 find_package(logging REQUIRED)
@@ -15,20 +14,18 @@ find_package(nlohmann_json REQUIRED)
 #find_package(Boost COMPONENTS unit_test_framework REQUIRED)
 
 ##############################################################################
-include_directories(${CMAKE_BINARY_DIR}/confmodel)
-daq_oks_codegen(dunedaq.schema.xml)
+
+daq_oks_codegen(dunedaq.schema.xml NAMESPACE dunedaq::confmodel)
 
 daq_add_library(dalMethods.cpp
   test_circular_dependency.cpp disabled-components.cpp
-  LINK_LIBRARIES conffwk::conffwk okssystem::okssystem
+  LINK_LIBRARIES conffwk::conffwk
   logging::logging nlohmann_json::nlohmann_json)
 
 
 daq_add_application(confmodel_list_apps list_apps.cxx
   LINK_LIBRARIES confmodel conffwk::conffwk)
 
-daq_add_application(confmodel_disable_test disable_test.cxx TEST
-  LINK_LIBRARIES confmodel conffwk::conffwk logging::logging)
 ##############################################################################
 
 

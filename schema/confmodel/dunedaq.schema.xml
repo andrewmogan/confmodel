@@ -80,7 +80,7 @@
 
 <oks-schema>
 
-<info name="" type="" num-of-items="49" oks-format="schema" oks-version="862f2957270" created-by="jcfree" created-on="mu2edaq13.fnal.gov" creation-time="20230123T223700" last-modified-by="gjc" last-modified-on="latitude" last-modification-time="20250117T143129"/>
+<info name="" type="" num-of-items="47" oks-format="schema" oks-version="862f2957270" created-by="jcfree" created-on="mu2edaq13.fnal.gov" creation-time="20230123T223700" last-modified-by="gjc" last-modified-on="latitude" last-modification-time="20250121T140306"/>
 
  <class name="ActionPlan" description="A set of parallel steps for an application to carry out a command">
   <attribute name="execution_policy" description="How the application should execute steps of the action plan" type="enum" range="modules-in-parallel,modules-in-series" init-value="modules-in-parallel"/>
@@ -151,7 +151,10 @@
  </class>
 
  <class name="DetDataReceiver" is-abstract="yes">
-  <superclass name="Resource"/>
+  <superclass name="ResourceBase"/>
+  <method name="is_disabled" description="">
+   <method-implementation language="c++" prototype="bool is_disabled(const std::set&lt;std::string&gt;&amp;) const override" body=""/>
+  </method>
  </class>
 
  <class name="DetDataSender" is-abstract="yes">
@@ -160,8 +163,8 @@
   <method name="get_contains" description="">
    <method-implementation language="c++" prototype="virtual const std::vector&lt;const ResourceBase*&gt;&amp; get_contains() const override" body="BEGIN_PRIVATE_SECTION&#xA;mutable std::vector&lt;const ResourceBase*&gt; m_contents;&#xA;END_PRIVATE_SECTION"/>
   </method>
-  <method name="disabled" description="">
-   <method-implementation language="c++" prototype="virtual bool disabled(const dunedaq::confmodel::Session&amp; session) const override" body=""/>
+  <method name="is_disabled" description="">
+   <method-implementation language="c++" prototype="virtual bool is_disabled(const std::set&lt;std::string&gt;&amp;) const override" body=""/>
   </method>
  </class>
 
@@ -171,8 +174,8 @@
   <method name="get_contains" description="">
    <method-implementation language="c++" prototype="virtual const std::vector&lt;const ResourceBase*&gt;&amp; get_contains() const override" body="BEGIN_PRIVATE_SECTION&#xA;mutable std::vector&lt;const ResourceBase*&gt; m_contents;&#xA;END_PRIVATE_SECTION"/>
   </method>
-  <method name="disabled" description="">
-   <method-implementation language="c++" prototype="virtual bool disabled(const dunedaq::confmodel::Session&amp; session) const override" body=""/>
+  <method name="is_disabled" description="">
+   <method-implementation language="c++" prototype="virtual bool is_disabled(const std::set&lt;std::string&gt;&amp;) const override" body=""/>
   </method>
  </class>
 
@@ -184,9 +187,12 @@
  </class>
 
  <class name="DetectorStream">
-  <superclass name="Resource"/>
+  <superclass name="ResourceBase"/>
   <attribute name="source_id" type="u32" is-not-null="yes"/>
   <relationship name="geo_id" class-type="GeoId" low-cc="one" high-cc="one" is-composite="no" is-exclusive="no" is-dependent="no"/>
+  <method name="is_disabled" description="">
+   <method-implementation language="c++" prototype="bool is_disabled(const std::set&lt;std::string&gt;&amp;) const override" body=""/>
+  </method>
  </class>
 
  <class name="DetectorToDaqConnection">
@@ -196,8 +202,8 @@
   <method name="get_streams" description="">
    <method-implementation language="c++" prototype="std::vector&lt;const confmodel::DetectorStream*&gt; get_streams() const" body=""/>
   </method>
-  <method name="disabled" description="">
-   <method-implementation language="c++" prototype="bool disabled(const dunedaq::confmodel::Session&amp; session) const override" body=""/>
+  <method name="is_disabled" description="">
+   <method-implementation language="c++" prototype="bool is_disabled(const std::set&lt;std::string&gt;&amp;) const override" body=""/>
   </method>
   <method name="get_contains" description="">
    <method-implementation language="c++" prototype="virtual const std::vector&lt;const ResourceBase*&gt;&amp; get_contains() const override" body="BEGIN_PRIVATE_SECTION&#xA;mutable std::vector&lt;const ResourceBase*&gt; m_contents;&#xA;END_PRIVATE_SECTION"/>
@@ -338,8 +344,11 @@
   <method name="get_parents" description="The algorithm calculates a vector of segments which are parents of given segment.&#xA;If the segment has parents referenced by the partition object, then:&#xA;- in case of C++ it fills the parents parameter; otherwise it throws {@link NotFoundException} exception">
    <method-implementation language="c++" prototype="void get_parents(const dunedaq::confmodel::Session&amp; session, std::list&lt; std::vector&lt;const dunedaq::confmodel::ResourceBase *&gt; &gt;&amp; parents) const" body=""/>
   </method>
-  <method name="disabled" description="The algorithm checks if the segment / resource is disabled in the partition that uses it.&#xA;@param partition      partition object containing this resource or segment&#xA;">
-   <method-implementation language="c++" prototype="virtual bool disabled(const dunedaq::confmodel::Session&amp; session) const" body=""/>
+  <method name="disabled(const Session&amp;)" description="">
+   <method-implementation language="c++" prototype="bool disabled(const dunedaq::confmodel::Session&amp; session) const" body="{BEGIN_HEADER_EPILOGUE&#xA;#include &quot;confmodel/Session.hpp&quot;&#xA;END_HEADER_EPILOGUE&#xA;  return (!session.m_disabled_components.is_enabled(this));&#xA;}"/>
+  </method>
+  <method name="is_disabled" description="">
+   <method-implementation language="c++" prototype="virtual bool is_disabled(const std::set&lt;std::string&gt;&amp;) const" body=""/>
   </method>
  </class>
 
@@ -350,23 +359,13 @@
   </method>
  </class>
 
- <class name="ResourceSetAND" description="This resource set is considered disabled when ALL nested resources are disabled.">
-  <superclass name="ResourceSet"/>
-  <relationship name="contains" class-type="ResourceBase" low-cc="zero" high-cc="many" is-composite="yes" is-exclusive="no" is-dependent="no"/>
- </class>
-
- <class name="ResourceSetOR" description="This resource set is considered disabled when ANY nested resource is disabled.">
-  <superclass name="ResourceSet"/>
-  <relationship name="contains" class-type="ResourceBase" low-cc="zero" high-cc="many" is-composite="yes" is-exclusive="no" is-dependent="no"/>
- </class>
-
  <class name="Segment" description="Logical sub division of the configuration that can be enabled/disabled as a group">
   <superclass name="ResourceSet"/>
   <relationship name="segments" description="Nested list of Segments that form part of this Segment" class-type="Segment" low-cc="zero" high-cc="many" is-composite="yes" is-exclusive="no" is-dependent="yes"/>
   <relationship name="applications" description="List of Applications that run in this Segment" class-type="Application" low-cc="zero" high-cc="many" is-composite="yes" is-exclusive="yes" is-dependent="yes"/>
   <relationship name="controller" description="This Segment&apos;s run controller." class-type="RCApplication" low-cc="one" high-cc="one" is-composite="yes" is-exclusive="yes" is-dependent="yes"/>
-  <method name="disabled" description="">
-   <method-implementation language="c++" prototype="virtual bool disabled(const dunedaq::confmodel::Session&amp; session) const override" body=""/>
+  <method name="is_disabled" description="">
+   <method-implementation language="c++" prototype="virtual bool is_disabled(const std::set&lt;std::string&gt;&amp;) const override" body=""/>
   </method>
   <method name="get_contains" description="">
    <method-implementation language="c++" prototype="virtual const std::vector&lt;const ResourceBase*&gt;&amp; get_contains() const" body="BEGIN_PRIVATE_SECTION&#xA;mutable std::vector&lt;const ResourceBase*&gt; m_contents;&#xA;END_PRIVATE_SECTION"/>
@@ -395,16 +394,13 @@
   <relationship name="detector_configuration" class-type="DetectorConfig" low-cc="one" high-cc="one" is-composite="no" is-exclusive="no" is-dependent="no"/>
   <relationship name="opmon_uri" description="Configuration for the OpMon facilities used across the session" class-type="OpMonURI" low-cc="one" high-cc="one" is-composite="yes" is-exclusive="no" is-dependent="yes"/>
   <method name="get_all_applications" description="Returns applications defined in the Session and all of its Segments.">
-   <method-implementation language="c++" prototype="std::vector&lt;const dunedaq::confmodel::Application *&gt; get_all_applications() const" body=""/>
+   <method-implementation language="c++" prototype="std::vector&lt;const dunedaq::confmodel::Application *&gt; get_all_applications() const" body="BEGIN_PRIVATE_SECTION&#xA;std::vector&lt;const Application*&gt;getSegmentApps(const Segment*,bool)const;END_PRIVATE_SECTION&#xA;BEGIN_HEADER_PROLOGUE&#xA;namespace dunedaq::confmodel{class Segment;}&#xA;END_HEADER_PROLOGUE"/>
   </method>
   <method name="get_enabled_applications" description="Returns all enabled applications defined in the Session and all of its Segments.">
    <method-implementation language="c++" prototype="std::vector&lt;const dunedaq::confmodel::Application *&gt; get_enabled_applications() const" body=""/>
   </method>
-  <method name="set_disabled" description="In addition to persistently disabled components, dynamically disable these components. It will be taken into account by disabled() algorithm of ResourceBase class. This information is not committed to the database and will be overwritten by next set_disabled() call or erased by any config action (DB load, unload, reload).">
-   <method-implementation language="c++" prototype="void set_disabled(const std::set&lt;const dunedaq::confmodel::ResourceBase *&gt;&amp; objs) const" body="BEGIN_PRIVATE_SECTION&#xA;friend class DisabledResources;&#xA;friend class ResourceBase;&#xA;mutable dunedaq::confmodel::DisabledResources m_disabled_components; &#xA;END_PRIVATE_SECTION&#xA;BEGIN_MEMBER_INITIALIZER_LIST&#xA;m_disabled_components(p_registry.configuration(),this)&#xA;END_MEMBER_INITIALIZER_LIST&#xA;BEGIN_HEADER_PROLOGUE&#xA;#include &quot;confmodel/disabled-components.hpp&quot;&#xA;END_HEADER_PROLOGUE"/>
-  </method>
-  <method name="set_enabled" description="Dynamically enable these persistently disabled components. It will be taken into account by disabled() algorithm of the ResourceBase class. This information is not committed to the database and will be overwritten by next set_enabled() call or erased by any config action (DB load, unload, reload).">
-   <method-implementation language="c++" prototype="void set_enabled(const std::set&lt;const dunedaq::confmodel::ResourceBase *&gt;&amp; objs) const" body=""/>
+  <method name="disabled_components" description="Get object describing all disabled components, either directly in the disabled relationship or due to dependencies among ResourceSets.">
+   <method-implementation language="c++" prototype="dunedaq::confmodel::DisabledResources&amp; disabled_components() const" body="BEGIN_PRIVATE_SECTION&#xA;friend class DisabledResources;&#xA;friend class ResourceBase;&#xA;mutable dunedaq::confmodel::DisabledResources m_disabled_components; &#xA;END_PRIVATE_SECTION&#xA;BEGIN_MEMBER_INITIALIZER_LIST&#xA;m_disabled_components(*this)&#xA;END_MEMBER_INITIALIZER_LIST&#xA;BEGIN_HEADER_PROLOGUE&#xA;#include &quot;confmodel/disabled-components.hpp&quot;&#xA;END_HEADER_PROLOGUE"/>
   </method>
  </class>
 
