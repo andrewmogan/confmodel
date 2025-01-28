@@ -55,17 +55,14 @@ namespace dunedaq::confmodel::python {
     return apps;
   }
 
-  bool component_disabled(const Configuration& db, const std::string& session_id, const std::string& component_id) {
-    try {
-      ConfigObject object;
-      const_cast<Configuration&>(db).get("ResourceBase", component_id, object);
-    }
-    catch (conffwk::NotFound& except) {
+  bool component_disabled(const Configuration& db,
+                          const std::string& session_id,
+                          const std::string& component_id) {
+    const dunedaq::confmodel::Session* session_ptr = const_cast<Configuration&>(db).get<dunedaq::confmodel::Session>(session_id);
+    const dunedaq::confmodel::ResourceBase* component_ptr = const_cast<Configuration&>(db).get<dunedaq::confmodel::ResourceBase>(component_id);
+    if (component_ptr == nullptr) {
       return false;
     }
-    const dunedaq::confmodel::ResourceBase* component_ptr = const_cast<Configuration&>(db).get<dunedaq::confmodel::ResourceBase>(component_id);
-    const dunedaq::confmodel::Session* session_ptr = const_cast<Configuration&>(db).get<dunedaq::confmodel::Session>(session_id);
-
     return component_ptr->disabled(*session_ptr);
   }
 
@@ -73,8 +70,8 @@ namespace dunedaq::confmodel::python {
   std::vector<std::vector<ObjectLocator>> component_get_parents(const Configuration& db,
                                                                 const std::string& session_id,
                                                                 const std::string& component_id) {
-    const dunedaq::confmodel::ResourceBase* component_ptr = const_cast<Configuration&>(db).get<dunedaq::confmodel::ResourceBase>(component_id);
     const dunedaq::confmodel::Session* session_ptr = const_cast<Configuration&>(db).get<dunedaq::confmodel::Session>(session_id);
+    const dunedaq::confmodel::ResourceBase* component_ptr = const_cast<Configuration&>(db).get<dunedaq::confmodel::ResourceBase>(component_id);
 
     std::list<std::vector<const dunedaq::confmodel::ResourceBase*>> parents;
     std::vector<std::vector<ObjectLocator>> parent_ids;
