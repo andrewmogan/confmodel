@@ -241,10 +241,17 @@
   <attribute name="numa_id" type="u8" init-value="0" is-not-null="yes"/>
  </class>
 
- <class name="Jsonable">
+ <class name="Jsonable" is-abstract="yes">
   <method name="to_json" description="">
-   <method-implementation language="c++" prototype="nlohmann::json to_json(bool diect=false) const" body="BEGIN_HEADER_PROLOGUE&#xA;#include &quot;nlohmann/json.hpp&quot;&#xA;END_HEADER_PROLOGUE"/>
+   <method-implementation language="c++" prototype="nlohmann::json to_json(bool direct=false, bool skip_name=false) const" body="BEGIN_HEADER_PROLOGUE&#xA;#include &quot;nlohmann/json.hpp&quot;&#xA;END_HEADER_PROLOGUE"/>
   </method>
+ </class>
+
+ <class name="JsonableTest">
+<superclass name="Jsonable"/>
+  <attribute name="this" type="u32" is-not-null="yes" init-value="0"/>
+  <attribute name="that" type="u32" is-not-null="yes" init-value="1"/>
+  <relationship name="other" class-type="JsonableTest" low-cc="zero" high-cc="one" is-composite="yes" is-exclusive="no" is-dependent="no"/>
  </class>
 
  <class name="NetworkConnection">

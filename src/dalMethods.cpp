@@ -212,10 +212,12 @@ DaqApplication::get_used_hostresources() const {
   return res;
 }
 
+namespace {
 nlohmann::json get_json_config(conffwk::Configuration& confdb,
                                const std::string& class_name,
                                const std::string& uid,
-                               bool direct_only) {
+                               bool direct_only,
+                               bool skip_object_name) {
   using nlohmann::json;
   using namespace conffwk;
   TLOG_DBG(9) << "Getting attributes for " << uid << " of class " << class_name;
@@ -277,7 +279,8 @@ nlohmann::json get_json_config(conffwk::Configuration& confdb,
           TLOG_DBG(9) << "Getting attibute of relationship " << rel_name;
           attributes[rel_name] = get_json_config(confdb, rel_obj.class_name(),
                                                  rel_obj.UID(),
-                                                 direct_only);
+                                                 direct_only,
+                                                 skip_object_name);
         }
         else {
           TLOG_DBG(9) << "Relationship " << rel_name << " not set";
@@ -292,21 +295,27 @@ nlohmann::json get_json_config(conffwk::Configuration& confdb,
         for (auto rel_obj : rel_vec) {
           TLOG_DBG(9) << "Getting attibute of relationship " << rel_obj.UID();
           auto rel_conf = get_json_config(confdb, rel_obj.class_name(), rel_obj.UID(),
-                                          direct_only);
+                                          direct_only, skip_object_name);
           configs.push_back(rel_conf);
         }
         attributes[rel_name] = configs;
       }
     }
   }
+
+  if (skip_object_name) {
+    return attributes;
+  }
   json json_config;
   json_config[uid] = attributes;
   return json_config;
 }
+} // namespace
 
-nlohmann::json Jsonable::to_json(bool direct_only) const {
-
-  return get_json_config(p_db, class_name(), UID(), direct_only);
+nlohmann::json Jsonable::to_json(bool direct_only,
+                                 bool skip_object_name) const {
+  return get_json_config(p_db, class_name(), UID(), direct_only,
+                         skip_object_name);
 }
 
 const std::vector<std::string> DaqApplication::construct_commandline_parameters(
