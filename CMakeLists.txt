@@ -29,6 +29,9 @@ daq_add_application(listApps list_apps.cxx
 
 daq_add_application(disable_test disable_test.cxx TEST
   LINK_LIBRARIES confmodel conffwk::conffwk logging::logging)
+
+daq_add_application(jsonable_test jsonable_test.cxx TEST
+  LINK_LIBRARIES confmodel conffwk::conffwk logging::logging)
 ##############################################################################
 
 
