@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.12)
-project(confmodel VERSION 2.1.0)
+project(confmodel VERSION 2.2.1)
 
 find_package(daq-cmake REQUIRED)
 
@@ -28,6 +28,9 @@ daq_add_application(confmodel_list_apps list_apps.cxx
   LINK_LIBRARIES confmodel conffwk::conffwk)
 
 daq_add_application(confmodel_disable_test disable_test.cxx TEST
+  LINK_LIBRARIES confmodel conffwk::conffwk logging::logging)
+
+daq_add_application(jsonable_test jsonable_test.cxx TEST
   LINK_LIBRARIES confmodel conffwk::conffwk logging::logging)
 ##############################################################################
 

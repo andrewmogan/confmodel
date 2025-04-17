@@ -212,10 +212,12 @@ DaqApplication::get_used_hostresources() const {
   return res;
 }
 
+namespace {
 nlohmann::json get_json_config(conffwk::Configuration& confdb,
                                const std::string& class_name,
                                const std::string& uid,
-                               bool direct_only) {
+                               bool direct_only,
+                               bool skip_object_name) {
   using nlohmann::json;
   using namespace conffwk;
   TLOG_DBG(9) << "Getting attributes for " << uid << " of class " << class_name;
@@ -277,7 +279,8 @@ nlohmann::json get_json_config(conffwk::Configuration& confdb,
           TLOG_DBG(9) << "Getting attibute of relationship " << rel_name;
           attributes[rel_name] = get_json_config(confdb, rel_obj.class_name(),
                                                  rel_obj.UID(),
-                                                 direct_only);
+                                                 direct_only,
+                                                 skip_object_name);
         }
         else {
           TLOG_DBG(9) << "Relationship " << rel_name << " not set";
@@ -292,21 +295,27 @@ nlohmann::json get_json_config(conffwk::Configuration& confdb,
         for (auto rel_obj : rel_vec) {
           TLOG_DBG(9) << "Getting attibute of relationship " << rel_obj.UID();
           auto rel_conf = get_json_config(confdb, rel_obj.class_name(), rel_obj.UID(),
-                                          direct_only);
+                                          direct_only, skip_object_name);
           configs.push_back(rel_conf);
         }
         attributes[rel_name] = configs;
       }
     }
   }
+
+  if (skip_object_name) {
+    return attributes;
+  }
   json json_config;
   json_config[uid] = attributes;
   return json_config;
 }
+} // namespace
 
-nlohmann::json Jsonable::to_json(bool direct_only) const {
-
-  return get_json_config(p_registry.configuration(), class_name(), UID(), direct_only);
+nlohmann::json Jsonable::to_json(bool direct_only,
+                                 bool skip_object_name) const {
+  return get_json_config(p_registry.configuration(), class_name(), UID(), direct_only,
+                         skip_object_name);
 }
 
 const std::vector<std::string> DaqApplication::construct_commandline_parameters(
@@ -325,9 +334,13 @@ const std::vector<std::string> RCApplication::construct_commandline_parameters(
 
     const std::string controller_log_level = session->get_controller_log_level();
 
-    for (auto const* as: get_exposes_service())
-      if (as->UID() == UID()+"_control") // unclear this is the best way to do this.
+    for (auto const *as : get_exposes_service()) {
+      if (as->UID().ends_with("_control")) {
+        if (control_service)
+          throw DuplicatedControlService(ERS_HERE, as->UID());
         control_service = as;
+      }
+    }
 
     if (control_service == nullptr)
       throw NoControlServiceDefined(ERS_HERE, UID());
@@ -358,7 +371,7 @@ std::vector<const confmodel::DetDataSender*> DetectorToDaqConnection::get_sender
           senders.push_back(sender);
       }
       else {
-          // Look for a resource set containing senders 
+          // Look for a resource set containing senders
           auto rs = d2d_res->cast<confmodel::ResourceSet>();
           if (rs != nullptr) {
               // Look for senders in resource set
@@ -382,7 +395,7 @@ const confmodel::DetDataReceiver* DetectorToDaqConnection::get_receiver() const 
 
   for ( auto d2d_res : this->get_contains() ) {
       auto r = d2d_res->cast<confmodel::DetDataReceiver>();
-      if ( r == nullptr ) 
+      if ( r == nullptr )
         continue;
 
       receivers.push_back(r);
@@ -409,7 +422,7 @@ std::vector<const confmodel::DetectorStream*> DetectorToDaqConnection::get_strea
         if ( !stream ) {
           throw(ConfigurationError(ERS_HERE, "DetectorToDaqConnection : Non-stream object '"+stream_res->UID()+"' found in DetDataSender '"+stream_res->UID()+"'"));
         }
-        
+
         streams.push_back(stream->cast<confmodel::DetectorStream>());
       }
     }
@@ -420,15 +433,15 @@ std::vector<const confmodel::DetectorStream*> DetectorToDaqConnection::get_strea
 std::string OpMonURI::get_URI( const std::string & app ) const {
 
   auto type = get_type();
-  if ( type == "file" ) { 
+  if ( type == "file" ) {
     return type + "://" + get_path();
   }
-  
+
   if ( type == "stream" ) {
     return type + "://" + get_path();
   }
-  
-  return "stdout://";  
+
+  return "stdout://";
 }
 
 }

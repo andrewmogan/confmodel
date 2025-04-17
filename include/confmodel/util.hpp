@@ -6,6 +6,7 @@
 #include "conffwk/Configuration.hpp"
 // #include "conffwk/DalObject.hpp"
 #include "nlohmann/json.hpp"
+#include "logging/Logging.hpp" // NOTE: if ISSUES ARE DECLARED BEFORE include logging/Logging.hpp, TLOG_DEBUG<<issue wont work.
 
 #include "confmodel/Application.hpp"
 #include "confmodel/PhysicalHost.hpp"
@@ -29,10 +30,19 @@ ERS_DECLARE_ISSUE_BASE(
 ERS_DECLARE_ISSUE_BASE(
     confmodel, NoControlServiceDefined, ConfigurationError,
     "The control service has not been set up for the application " + app_name +
-        " you need to define a service called " + app_name + "_control",
+        " you need to define a service called which has a name finishing with \'_control\'",
+    , ((std::string)app_name)
+)
+
+ERS_DECLARE_ISSUE_BASE(
+    confmodel, DuplicatedControlService, ConfigurationError,
+    "The control service has been defined multiple times for the application " +
+        app_name + " you need to define only one service called control",
     , ((std::string)app_name)
 
 )
+
+
 
 namespace confmodel {
 
@@ -93,10 +103,13 @@ const std::vector<std::string> construct_commandline_parameters_appfwk(
 
   const dunedaq::confmodel::Service *control_service = nullptr;
 
-  for (auto const *as : app->get_exposes_service())
-    if (as->UID() ==
-        app->UID() + "_control") // unclear this is the best way to do this.
+  for (auto const *as : app->get_exposes_service()) {
+    if (as->UID().ends_with("_control")) {
+      if (control_service)
+        throw DuplicatedControlService(ERS_HERE, as->UID());
       control_service = as;
+    }
+  }
 
   if (control_service == nullptr)
     throw NoControlServiceDefined(ERS_HERE, app->UID());
