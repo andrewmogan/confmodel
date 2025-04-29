@@ -11,8 +11,6 @@
 
 #include "test_circular_dependency.hpp"
 
-#include <dlfcn.h>
-
 using namespace dunedaq::confmodel;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -21,25 +19,6 @@ using namespace dunedaq::confmodel;
 DisabledResources::DisabledResources(Session& session)
 {
   TLOG_DEBUG(2) <<  "construct the object " << (void *)this ;
-
-  // Check that the dal is available for all schema used by the Session
-
-  // Extract unique list of package names from schema file names
-  std::set<std::string> packages;
-  for (auto file: session.configuration().get_schema()) {
-    std::string search {"schema/"};
-    auto start = file.rfind(search) + search.size();
-    auto end = file.find("/", start);
-    packages.insert(file.substr(start,end-start));
-  }
-  // Try loading the package's shared library
-  for (auto package: packages) {
-    std::string library = "lib"+package+".so";
-    auto handle = dlopen(library.c_str(), RTLD_LAZY|RTLD_GLOBAL);
-    if (handle == nullptr) {
-      throw (LoadDalFailed(ERS_HERE, library));
-    }
-  }
 
   if (session.get_disabled().empty()) {
     TLOG_DEBUG( 6) << "Session has no disabled components";
