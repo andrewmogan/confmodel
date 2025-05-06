@@ -18,10 +18,10 @@ find_package(nlohmann_json REQUIRED)
 
 daq_add_dal_library(dunedaq.schema.xml SOURCES dalMethods.cpp test_circular_dependency.cpp disabled-components.cpp LINK_LIBRARIES okssystem::okssystem logging::logging nlohmann_json::nlohmann_json)
 
-daq_add_application(listApps list_apps.cxx
+daq_add_application(confmodel_list_apps list_apps.cxx
   LINK_LIBRARIES confmodel_dal conffwk::conffwk)
 
-daq_add_application(disable_test disable_test.cxx TEST
+daq_add_application(confmodel_disable_test disable_test.cxx TEST
   LINK_LIBRARIES confmodel_dal conffwk::conffwk logging::logging)
 
 daq_add_application(jsonable_test jsonable_test.cxx TEST

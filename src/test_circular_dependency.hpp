@@ -6,7 +6,7 @@
 
 namespace dunedaq {
   namespace conffwk {
-    class DalObject;
+    class DalObject2g;
   }
 }
 

@@ -314,7 +314,7 @@ nlohmann::json get_json_config(conffwk::Configuration& confdb,
 
 nlohmann::json Jsonable::to_json(bool direct_only,
                                  bool skip_object_name) const {
-  return get_json_config(p_db, class_name(), UID(), direct_only,
+  return get_json_config(p_registry.configuration(), class_name(), UID(), direct_only,
                          skip_object_name);
 }
 
