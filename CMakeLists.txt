@@ -15,22 +15,28 @@ find_package(nlohmann_json REQUIRED)
 #find_package(Boost COMPONENTS unit_test_framework REQUIRED)
 
 ##############################################################################
+include_directories(${CMAKE_BINARY_DIR}/confmodel)
+daq_oks_codegen(dunedaq.schema.xml)
 
-daq_add_dal_library(dunedaq.schema.xml SOURCES dalMethods.cpp test_circular_dependency.cpp disabled-components.cpp LINK_LIBRARIES okssystem::okssystem logging::logging nlohmann_json::nlohmann_json)
+daq_add_library(dalMethods.cpp
+  test_circular_dependency.cpp disabled-components.cpp
+  LINK_LIBRARIES conffwk::conffwk okssystem::okssystem
+  logging::logging nlohmann_json::nlohmann_json)
 
-daq_add_application(confmodel_list_apps list_apps.cxx
-  LINK_LIBRARIES confmodel_dal conffwk::conffwk)
 
-daq_add_application(confmodel_disable_test disable_test.cxx TEST
-  LINK_LIBRARIES confmodel_dal conffwk::conffwk logging::logging)
+daq_add_application(listApps list_apps.cxx
+  LINK_LIBRARIES confmodel conffwk::conffwk)
+
+daq_add_application(disable_test disable_test.cxx TEST
+  LINK_LIBRARIES confmodel conffwk::conffwk logging::logging)
 
 daq_add_application(jsonable_test jsonable_test.cxx TEST
-  LINK_LIBRARIES confmodel_dal conffwk::conffwk logging::logging)
+  LINK_LIBRARIES confmodel conffwk::conffwk logging::logging)
 ##############################################################################
 
 
 # See https://dune-daq-sw.readthedocs.io/en/latest/packages/daq-cmake/#daq_add_python_bindings
-daq_add_python_bindings(*.cpp LINK_LIBRARIES confmodel_dal)
+daq_add_python_bindings(*.cpp LINK_LIBRARIES confmodel)
 
 
 ##############################################################################
