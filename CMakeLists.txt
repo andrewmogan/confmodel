@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.12)
-project(confmodel VERSION 2.1.0)
+project(confmodel VERSION 2.2.1)
 
 find_package(daq-cmake REQUIRED)
 
@@ -23,9 +23,11 @@ daq_add_library(dalMethods.cpp
   logging::logging nlohmann_json::nlohmann_json)
 
 
-daq_add_application(confmodel_list_apps list_apps.cxx
+daq_add_application(listApps list_apps.cxx
   LINK_LIBRARIES confmodel conffwk::conffwk)
 
+daq_add_application(jsonable_test jsonable_test.cxx TEST
+  LINK_LIBRARIES confmodel conffwk::conffwk logging::logging)
 ##############################################################################
 
 

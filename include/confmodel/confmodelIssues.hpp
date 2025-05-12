@@ -24,6 +24,15 @@ ERS_DECLARE_ISSUE_BASE(
         " you need to define a service called " + app_name + "_control",
     , ((std::string)app_name))
 
+
+ERS_DECLARE_ISSUE_BASE(
+    confmodel, DuplicatedControlService, ConfigurationError,
+    "The control service has been defined multiple times for the application " +
+        app_name + " you need to define only one service called control",
+    , ((std::string)app_name)
+
+)
+
 ERS_DECLARE_ISSUE_BASE(confmodel, BadConf, ConfigurationError,
                        what << where,
                        ,
