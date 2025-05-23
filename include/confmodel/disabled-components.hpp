@@ -48,6 +48,8 @@ namespace dunedaq::confmodel {
 
       ~DisabledResources() = default;
 
+      void update(Session& session);
+
       bool
       is_enabled(const ResourceBase* component) {
         return !m_disabled.contains(component->UID());

@@ -64,7 +64,7 @@ make_parents_list(
   p_list.push_back(resource_set);
 
   // check if the application is in the resource relationship, i.e. is a resource or belongs to resource set(s)
-  for (const auto& i : resource_set->get_contains()) {
+  for (const auto& i : resource_set->get_resources()) {
     if (i->config_object().implementation() == child) {
       out.push_back(p_list);
     }
@@ -402,12 +402,12 @@ bool ResourceBase::is_disabled(const std::set<std::string>& disabled_resources) 
   return false;
 }
 
-const std::vector<const ResourceBase*>& ResourceSet::get_contains() const {
+const std::vector<const ResourceBase*>& ResourceSet::get_resources() const {
   throw (BadConf(ERS_HERE,
-                 "No get_contains method defined for ResourceSet ", UID()));
+                 "No get_resources method defined for ResourceSet ", UID()));
 }
 
-const std::vector<const ResourceBase*>& DetSenderSet::get_contains() const {
+const std::vector<const ResourceBase*>& DetSenderSet::get_resources() const {
   if (m_contents.empty()) {
     std::lock_guard scoped_lock(m_mutex);
     check_init();
@@ -432,7 +432,7 @@ bool DetSenderSet::is_disabled(const std::set<std::string>& disabled_resources) 
 }
 
 
-const std::vector<const ResourceBase*>& DetDataSender::get_contains() const {
+const std::vector<const ResourceBase*>& DetDataSender::get_resources() const {
   if (m_contents.empty()) {
     std::lock_guard scoped_lock(m_mutex);
     check_init();
@@ -467,7 +467,7 @@ bool DetectorStream::is_disabled(const std::set<std::string>& disabled_resources
   return false;
 }
 
-const std::vector<const ResourceBase*>& DetectorToDaqConnection::get_contains() const {
+const std::vector<const ResourceBase*>& DetectorToDaqConnection::get_resources() const {
   TLOG_DBG(6) << "m_contents.size=" << m_contents.size()
               << " m_senders=" << m_senders
               << " m_receiver=" << m_receiver;
@@ -494,7 +494,7 @@ DetectorToDaqConnection::is_disabled(const std::set<std::string>& disabled_resou
 }
 
 const std::vector<const ResourceBase*>&
-Segment::get_contains() const {
+Segment::get_resources() const {
   TLOG_DBG(6) << "entered: UID=" << UID() << " m_contents.size=" << m_contents.size();
   if (m_contents.empty()) {
     std::lock_guard scoped_lock(m_mutex);
@@ -522,7 +522,7 @@ bool Segment::is_disabled(const std::set<std::string>& disabled_resources) const
     return true;
   }
   // Check that not all our children are disabled
-  for (auto res: get_contains()) {
+  for (auto res: get_resources()) {
     TLOG_DBG(6) << "Checking " << res->UID();
     if (!res->is_disabled(disabled_resources)) {
       TLOG_DBG(6) << res->UID() << " is not disabled";

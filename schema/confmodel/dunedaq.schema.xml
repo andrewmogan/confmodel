@@ -80,7 +80,7 @@
 
 <oks-schema>
 
-<info name="" type="" num-of-items="48" oks-format="schema" oks-version="862f2957270" created-by="jcfree" created-on="mu2edaq13.fnal.gov" creation-time="20230123T223700" last-modified-by="gjc" last-modified-on="latitude" last-modification-time="20250521T160846"/>
+<info name="" type="" num-of-items="48" oks-format="schema" oks-version="862f2957270" created-by="jcfree" created-on="mu2edaq13.fnal.gov" creation-time="20230123T223700" last-modified-by="gjc" last-modified-on="latitude" last-modification-time="20250523T140540"/>
 
  <class name="ActionPlan" description="A set of parallel steps for an application to carry out a command">
   <attribute name="execution_policy" description="How the application should execute steps of the action plan" type="enum" range="modules-in-parallel,modules-in-series" init-value="modules-in-parallel"/>
@@ -159,9 +159,9 @@
 
  <class name="DetDataSender" is-abstract="yes">
   <superclass name="ResourceSet"/>
-  <relationship name="streams" class-type="DetectorStream" low-cc="one" high-cc="many" is-composite="yes" is-exclusive="yes" is-dependent="yes"/>
-  <method name="get_contains" description="">
-   <method-implementation language="c++" prototype="virtual const std::vector&lt;const ResourceBase*&gt;&amp; get_contains() const override" body="BEGIN_PRIVATE_SECTION&#xA;mutable std::vector&lt;const ResourceBase*&gt; m_contents;&#xA;END_PRIVATE_SECTION"/>
+  <relationship name="streams" class-type="DetectorStream" low-cc="one" high-cc="many" is-composite="no" is-exclusive="yes" is-dependent="no"/>
+  <method name="get_resources" description="">
+   <method-implementation language="c++" prototype="virtual const std::vector&lt;const ResourceBase*&gt;&amp; get_resources() const override" body="BEGIN_PRIVATE_SECTION&#xA;mutable std::vector&lt;const ResourceBase*&gt; m_contents;&#xA;END_PRIVATE_SECTION"/>
   </method>
   <method name="is_disabled" description="">
    <method-implementation language="c++" prototype="virtual bool is_disabled(const std::set&lt;std::string&gt;&amp;) const override" body=""/>
@@ -171,8 +171,8 @@
  <class name="DetSenderSet">
   <superclass name="ResourceSet"/>
   <relationship name="senders" class-type="DetDataSender" low-cc="one" high-cc="many" is-composite="yes" is-exclusive="yes" is-dependent="yes"/>
-  <method name="get_contains" description="">
-   <method-implementation language="c++" prototype="virtual const std::vector&lt;const ResourceBase*&gt;&amp; get_contains() const override" body="BEGIN_PRIVATE_SECTION&#xA;mutable std::vector&lt;const ResourceBase*&gt; m_contents;&#xA;END_PRIVATE_SECTION"/>
+  <method name="get_resources" description="">
+   <method-implementation language="c++" prototype="virtual const std::vector&lt;const ResourceBase*&gt;&amp; get_resources() const override" body="BEGIN_PRIVATE_SECTION&#xA;mutable std::vector&lt;const ResourceBase*&gt; m_contents;&#xA;END_PRIVATE_SECTION"/>
   </method>
   <method name="is_disabled" description="">
    <method-implementation language="c++" prototype="virtual bool is_disabled(const std::set&lt;std::string&gt;&amp;) const override" body=""/>
@@ -205,8 +205,8 @@
   <method name="is_disabled" description="">
    <method-implementation language="c++" prototype="bool is_disabled(const std::set&lt;std::string&gt;&amp;) const override" body=""/>
   </method>
-  <method name="get_contains" description="">
-   <method-implementation language="c++" prototype="virtual const std::vector&lt;const ResourceBase*&gt;&amp; get_contains() const override" body="BEGIN_PRIVATE_SECTION&#xA;mutable std::vector&lt;const ResourceBase*&gt; m_contents;&#xA;END_PRIVATE_SECTION"/>
+  <method name="get_resources" description="">
+   <method-implementation language="c++" prototype="virtual const std::vector&lt;const ResourceBase*&gt;&amp; get_resources() const override" body="BEGIN_PRIVATE_SECTION&#xA;mutable std::vector&lt;const ResourceBase*&gt; m_contents;&#xA;END_PRIVATE_SECTION"/>
   </method>
  </class>
 
@@ -343,10 +343,6 @@
   <attribute name="publish_timeout" type="u32" init-value="2" is-not-null="yes"/>
  </class>
 
- <class name="Resource">
-  <superclass name="ResourceBase"/>
- </class>
-
  <class name="ResourceBase" description="Base class for all Resource objects. A Resource is an object with an enabled/disabled state.&#xA;Derived classes must implement the is_disabled() method to return the state.">
   <method name="get_parents" description="The algorithm calculates a vector of segments which are parents of given segment.&#xA;If the segment has parents referenced by the partition object, then:&#xA;- in case of C++ it fills the parents parameter; otherwise it throws {@link NotFoundException} exception">
    <method-implementation language="c++" prototype="void get_parents(const dunedaq::confmodel::Session&amp; session, std::list&lt; std::vector&lt;const dunedaq::confmodel::ResourceBase *&gt; &gt;&amp; parents) const" body=""/>
@@ -354,15 +350,22 @@
   <method name="disabled(const Session&amp;)" description="">
    <method-implementation language="c++" prototype="bool disabled(const dunedaq::confmodel::Session&amp; session) const" body="{BEGIN_HEADER_EPILOGUE&#xA;#include &quot;confmodel/Session.hpp&quot;&#xA;END_HEADER_EPILOGUE&#xA;  return (!session.m_disabled_components.is_enabled(this));&#xA;}"/>
   </method>
-  <method name="is_disabled" description="">
+  <method name="is_disabled" description="Virtual method to be implemented by subclasses containing the logic to determine if this object should be considered disabled.">
    <method-implementation language="c++" prototype="virtual bool is_disabled(const std::set&lt;std::string&gt;&amp;) const" body=""/>
   </method>
  </class>
 
- <class name="ResourceSet" description="Base class for a collection of Resource items. Derived classes must implement the get_contains() method to return a vector of Resource objects." is-abstract="yes">
+ <class name="ResourceSet" description="Base class for a collection of Resource items. Derived classes must implement the get_resources() method to return a vector of Resource objects." is-abstract="yes">
   <superclass name="ResourceBase"/>
-  <method name="get_contains" description="Virtual method to obtain the list of all contained Resources. Used internally by the core disabled logic. Not intended to be used in application code as that should be using individual relationships of the derived classes.">
-   <method-implementation language="c++" prototype="virtual const std::vector&lt;const ResourceBase*&gt;&amp; get_contains() const" body=""/>
+  <method name="get_resources" description="Virtual method to obtain the list of all contained Resources. Used internally by the core disabled logic. Not intended to be used in application code as that should be using individual relationships of the derived classes.">
+   <method-implementation language="c++" prototype="virtual const std::vector&lt;const ResourceBase*&gt;&amp; get_resources() const" body=""/>
+  </method>
+ </class>
+
+ <class name="ResourceSetDisableAND" description="Abstract base class for a resource set that determines it&apos;s disabled state by ANDing all its contained resources." is-abstract="yes">
+  <superclass name="ResourceSet"/>
+  <method name="is_disabled" description="Method that ANDs all resources to determine disabled state.">
+   <method-implementation language="c++" prototype="bool is_disabled(const std::set&lt;std::string&gt;&amp; disabled) const final" body="  if (disabled.contains(UID())) {&#xA;    return true;&#xA;  }&#xA;  for (auto res: get_resources()) {&#xA;     if (!res-&gt;is_disabled(disabled)) {&#xA;        return false;&#xA;    }&#xA;  }&#xA;  return true;&#xA;  "/>
   </method>
  </class>
 
@@ -374,8 +377,8 @@
   <method name="is_disabled" description="">
    <method-implementation language="c++" prototype="virtual bool is_disabled(const std::set&lt;std::string&gt;&amp;) const override" body=""/>
   </method>
-  <method name="get_contains" description="">
-   <method-implementation language="c++" prototype="virtual const std::vector&lt;const ResourceBase*&gt;&amp; get_contains() const" body="BEGIN_PRIVATE_SECTION&#xA;mutable std::vector&lt;const ResourceBase*&gt; m_contents;&#xA;END_PRIVATE_SECTION"/>
+  <method name="get_resources" description="">
+   <method-implementation language="c++" prototype="virtual const std::vector&lt;const ResourceBase*&gt;&amp; get_resources() const" body="BEGIN_PRIVATE_SECTION&#xA;mutable std::vector&lt;const ResourceBase*&gt; m_contents;&#xA;END_PRIVATE_SECTION"/>
   </method>
  </class>
 

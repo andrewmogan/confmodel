@@ -49,7 +49,7 @@ void process_segment(const Session* session,
         }
         std::cout << " contains: {";
         std::string seperator = "";
-        for (auto mod : rset->get_contains()) {
+        for (auto mod : rset->get_resources()) {
           std::cout << seperator << mod->UID();
           if (mod->disabled(*session)) {
             std::cout << "<disabled ";
