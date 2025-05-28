@@ -80,7 +80,7 @@
 
 <oks-schema>
 
-<info name="" type="" num-of-items="48" oks-format="schema" oks-version="862f2957270" created-by="jcfree" created-on="mu2edaq13.fnal.gov" creation-time="20230123T223700" last-modified-by="gjc" last-modified-on="latitude" last-modification-time="20250523T140540"/>
+<info name="" type="" num-of-items="48" oks-format="schema" oks-version="862f2957270" created-by="jcfree" created-on="mu2edaq13.fnal.gov" creation-time="20230123T223700" last-modified-by="gjc" last-modified-on="latitude" last-modification-time="20250528T083819"/>
 
  <class name="ActionPlan" description="A set of parallel steps for an application to carry out a command">
   <attribute name="execution_policy" description="How the application should execute steps of the action plan" type="enum" range="modules-in-parallel,modules-in-series" init-value="modules-in-parallel"/>
@@ -195,10 +195,8 @@
   </method>
  </class>
 
- <class name="DetectorToDaqConnection">
+ <class name="DetectorToDaqConnection" is-abstract="yes">
   <superclass name="ResourceSet"/>
-  <relationship name="senders" class-type="DetSenderSet" low-cc="one" high-cc="one" is-composite="yes" is-exclusive="yes" is-dependent="yes"/>
-  <relationship name="receiver" class-type="DetDataReceiver" low-cc="one" high-cc="one" is-composite="yes" is-exclusive="yes" is-dependent="yes"/>
   <method name="get_streams" description="">
    <method-implementation language="c++" prototype="std::vector&lt;const confmodel::DetectorStream*&gt; get_streams() const" body=""/>
   </method>
@@ -207,6 +205,12 @@
   </method>
   <method name="get_resources" description="">
    <method-implementation language="c++" prototype="virtual const std::vector&lt;const ResourceBase*&gt;&amp; get_resources() const override" body="BEGIN_PRIVATE_SECTION&#xA;mutable std::vector&lt;const ResourceBase*&gt; m_contents;&#xA;END_PRIVATE_SECTION"/>
+  </method>
+  <method name="get_senders" description="Pure virtual method to get vector of DataSenders">
+   <method-implementation language="c++" prototype="virtual std::vector&lt;const DetDataSender*&gt; get_senders() const = 0" body=""/>
+  </method>
+  <method name="get_receiver" description="Pure virtual method to get DataReceiver associated with this connection">
+   <method-implementation language="c++" prototype="virtual const DetDataReceiver* get_receiver() const = 0" body=""/>
   </method>
  </class>
 

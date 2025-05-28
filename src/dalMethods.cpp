@@ -369,7 +369,7 @@ const std::vector<std::string> RCApplication::construct_commandline_parameters(
 std::vector<const confmodel::DetectorStream*> DetectorToDaqConnection::get_streams() const {
   std::vector<const confmodel::DetectorStream*> streams;
     // Loop over senders
-  for (auto sender : this->get_senders()->get_senders()) {
+  for (auto sender : this->get_senders()) {
       // loop over streams
       for (auto stream_res : sender->get_streams()) {
         streams.push_back(stream_res);
@@ -468,14 +468,16 @@ bool DetectorStream::is_disabled(const std::set<std::string>& disabled_resources
 }
 
 const std::vector<const ResourceBase*>& DetectorToDaqConnection::get_resources() const {
-  TLOG_DBG(6) << "m_contents.size=" << m_contents.size()
-              << " m_senders=" << m_senders
-              << " m_receiver=" << m_receiver;
+  TLOG_DBG(6) << "m_contents.size=" << m_contents.size();
   if (m_contents.empty()) {
     std::lock_guard scoped_lock(m_mutex);
     check_init();
-    m_contents.push_back(m_senders);
-    m_contents.push_back(m_receiver);
+    for (auto res: get_senders()) {
+      std::cout << "pushing " << res->UID() << "\n";
+      m_contents.push_back(res);
+    }
+    std::cout << "pushing receiver " << get_receiver()->UID() << "\n";
+    m_contents.push_back(get_receiver());
   }
   return m_contents;
 }
@@ -485,9 +487,16 @@ DetectorToDaqConnection::is_disabled(const std::set<std::string>& disabled_resou
   if (disabled_resources.contains(UID())) {
     return true;
   }
+  bool send_disabled = true;
+  for (auto sender: get_senders()) {
+    if (!sender->is_disabled(disabled_resources)) {
+      send_disabled = false;
+      break;
+    }
+  }
   TLOG_DBG(6) << "receiver disabled=" << get_receiver()->is_disabled(disabled_resources)
-              << " senders disabled=" << get_senders()->is_disabled(disabled_resources);
-  if (get_receiver()->is_disabled(disabled_resources) || get_senders()->is_disabled(disabled_resources)) {
+              << " senders disabled=" << send_disabled;
+  if (get_receiver()->is_disabled(disabled_resources) || send_disabled) {
     return true;
   }
   return false;
