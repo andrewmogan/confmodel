@@ -80,7 +80,7 @@
 
 <oks-schema>
 
-<info name="" type="" num-of-items="48" oks-format="schema" oks-version="862f2957270" created-by="jcfree" created-on="mu2edaq13.fnal.gov" creation-time="20230123T223700" last-modified-by="gjc" last-modified-on="latitude" last-modification-time="20250528T083819"/>
+<info name="" type="" num-of-items="47" oks-format="schema" oks-version="862f2957270" created-by="jcfree" created-on="mu2edaq13.fnal.gov" creation-time="20230123T223700" last-modified-by="gjc" last-modified-on="latitude" last-modification-time="20250529T132759"/>
 
  <class name="ActionPlan" description="A set of parallel steps for an application to carry out a command">
   <attribute name="execution_policy" description="How the application should execute steps of the action plan" type="enum" range="modules-in-parallel,modules-in-series" init-value="modules-in-parallel"/>
@@ -160,17 +160,6 @@
  <class name="DetDataSender" is-abstract="yes">
   <superclass name="ResourceSet"/>
   <relationship name="streams" class-type="DetectorStream" low-cc="one" high-cc="many" is-composite="no" is-exclusive="yes" is-dependent="no"/>
-  <method name="get_resources" description="">
-   <method-implementation language="c++" prototype="virtual const std::vector&lt;const ResourceBase*&gt;&amp; get_resources() const override" body="BEGIN_PRIVATE_SECTION&#xA;mutable std::vector&lt;const ResourceBase*&gt; m_contents;&#xA;END_PRIVATE_SECTION"/>
-  </method>
-  <method name="is_disabled" description="">
-   <method-implementation language="c++" prototype="virtual bool is_disabled(const std::set&lt;std::string&gt;&amp;) const override" body=""/>
-  </method>
- </class>
-
- <class name="DetSenderSet">
-  <superclass name="ResourceSet"/>
-  <relationship name="senders" class-type="DetDataSender" low-cc="one" high-cc="many" is-composite="yes" is-exclusive="yes" is-dependent="yes"/>
   <method name="get_resources" description="">
    <method-implementation language="c++" prototype="virtual const std::vector&lt;const ResourceBase*&gt;&amp; get_resources() const override" body="BEGIN_PRIVATE_SECTION&#xA;mutable std::vector&lt;const ResourceBase*&gt; m_contents;&#xA;END_PRIVATE_SECTION"/>
   </method>

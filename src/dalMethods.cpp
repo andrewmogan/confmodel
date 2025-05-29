@@ -366,14 +366,13 @@ const std::vector<std::string> RCApplication::construct_commandline_parameters(
 
 
 
-std::vector<const confmodel::DetectorStream*> DetectorToDaqConnection::get_streams() const {
+std::vector<const confmodel::DetectorStream*>
+DetectorToDaqConnection::get_streams() const {
   std::vector<const confmodel::DetectorStream*> streams;
-    // Loop over senders
+  // Loop over senders
   for (auto sender : this->get_senders()) {
-      // loop over streams
-      for (auto stream_res : sender->get_streams()) {
-        streams.push_back(stream_res);
-      }
+    auto sender_streams = sender->get_streams();
+    streams.insert(streams.end(), sender_streams.begin(), sender_streams.end());
   }
   return streams;
 }
@@ -473,10 +472,8 @@ const std::vector<const ResourceBase*>& DetectorToDaqConnection::get_resources()
     std::lock_guard scoped_lock(m_mutex);
     check_init();
     for (auto res: get_senders()) {
-      std::cout << "pushing " << res->UID() << "\n";
       m_contents.push_back(res);
     }
-    std::cout << "pushing receiver " << get_receiver()->UID() << "\n";
     m_contents.push_back(get_receiver());
   }
   return m_contents;
