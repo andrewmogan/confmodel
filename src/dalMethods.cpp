@@ -14,7 +14,6 @@
 #include "confmodel/DaqModule.hpp"
 #include "confmodel/DetDataSender.hpp"
 #include "confmodel/DetDataReceiver.hpp"
-#include "confmodel/DetSenderSet.hpp"
 #include "confmodel/DetectorToDaqConnection.hpp"
 #include "confmodel/DetectorStream.hpp"
 #include "confmodel/Jsonable.hpp"
@@ -404,30 +403,6 @@ bool ResourceBase::is_disabled(const std::set<std::string>& disabled_resources) 
 const std::vector<const ResourceBase*>& ResourceSet::get_resources() const {
   throw (BadConf(ERS_HERE,
                  "No get_resources method defined for ResourceSet ", UID()));
-}
-
-const std::vector<const ResourceBase*>& DetSenderSet::get_resources() const {
-  if (m_contents.empty()) {
-    std::lock_guard scoped_lock(m_mutex);
-    check_init();
-    for (auto sender: m_senders) {
-      m_contents.push_back(sender);
-    }
-  }
-  return m_contents;
-}
-
-
-bool DetSenderSet::is_disabled(const std::set<std::string>& disabled_resources) const {
-  if (disabled_resources.contains(UID())) {
-    return true;
-  }
-  for (auto sender: m_senders) {
-    if (!sender->is_disabled(disabled_resources)) {
-      return false;
-    }
-  }
-  return true;
 }
 
 
