@@ -422,6 +422,27 @@ const std::vector<const ResourceBase*>& DetectorToDaqConnection::get_resources()
   return m_contents;
 }
 
+
+bool
+DetectorToDaqConnection::is_disabled(const std::set<std::string>& disabled_resources) const {
+  if (disabled_resources.contains(UID())) {
+    return true;
+  }
+  bool send_disabled = true;
+  for (auto sender: get_senders()) {
+    if (!sender->is_disabled(disabled_resources)) {
+      send_disabled = false;
+      break;
+    }
+  }
+  TLOG_DBG(6) << "receiver disabled=" << get_receiver()->is_disabled(disabled_resources)
+              << " senders disabled=" << send_disabled;
+  if (get_receiver()->is_disabled(disabled_resources) || send_disabled) {
+    return true;
+  }
+  return false;
+}
+
 const std::vector<const ResourceBase*>&
 Segment::get_resources() const {
   TLOG_DBG(6) << "entered: UID=" << UID() << " m_contents.size=" << m_contents.size();
