@@ -391,20 +391,12 @@ std::string OpMonURI::get_URI( const std::string & /* app */) const {
 }
 
 bool ResourceBase::is_disabled(const std::set<std::string>& disabled_resources) const {
-  // throw (BadConf(ERS_HERE,
-  //                "No is_disabled method defined for Resource ", UID()));
+  TLOG_DEBUG(6) << "No is_disabled method defined for Resource " << class_name();
   if (disabled_resources.contains(UID())) {
     return true;
   }
-  std::cout << "No is_disabled method defined for Resource " << UID() << "\n";
   return false;
 }
-
-const std::vector<const ResourceBase*>& ResourceSet::get_resources() const {
-  throw (BadConf(ERS_HERE,
-                 "No get_resources method defined for ResourceSet ", UID()));
-}
-
 
 const std::vector<const ResourceBase*>& DetDataSender::get_resources() const {
   if (m_contents.empty()) {
@@ -415,30 +407,6 @@ const std::vector<const ResourceBase*>& DetDataSender::get_resources() const {
     }
   }
   return m_contents;
-}
-bool DetDataSender::is_disabled(const std::set<std::string>& disabled_resources) const {
-  if (disabled_resources.contains(UID())) {
-    return true;
-  }
-  for (auto stream: m_streams) {
-    if (!stream->is_disabled(disabled_resources)) {
-      return false;
-    }
-  }
-  return true;
-}
-
-bool DetDataReceiver::is_disabled(const std::set<std::string>& disabled_resources) const {
-  if (disabled_resources.contains(UID())) {
-    return true;
-  }
-  return false;
-}
-bool DetectorStream::is_disabled(const std::set<std::string>& disabled_resources) const {
-  if (disabled_resources.contains(UID())) {
-    return true;
-  }
-  return false;
 }
 
 const std::vector<const ResourceBase*>& DetectorToDaqConnection::get_resources() const {
@@ -452,26 +420,6 @@ const std::vector<const ResourceBase*>& DetectorToDaqConnection::get_resources()
     m_contents.push_back(get_receiver());
   }
   return m_contents;
-}
-
-bool
-DetectorToDaqConnection::is_disabled(const std::set<std::string>& disabled_resources) const {
-  if (disabled_resources.contains(UID())) {
-    return true;
-  }
-  bool send_disabled = true;
-  for (auto sender: get_senders()) {
-    if (!sender->is_disabled(disabled_resources)) {
-      send_disabled = false;
-      break;
-    }
-  }
-  TLOG_DBG(6) << "receiver disabled=" << get_receiver()->is_disabled(disabled_resources)
-              << " senders disabled=" << send_disabled;
-  if (get_receiver()->is_disabled(disabled_resources) || send_disabled) {
-    return true;
-  }
-  return false;
 }
 
 const std::vector<const ResourceBase*>&
@@ -498,20 +446,5 @@ Segment::get_resources() const {
   return m_contents;
 }
 
-bool Segment::is_disabled(const std::set<std::string>& disabled_resources) const {
-  if (disabled_resources.contains(UID())) {
-    return true;
-  }
-  // Check that not all our children are disabled
-  for (auto res: get_resources()) {
-    TLOG_DBG(6) << "Checking " << res->UID();
-    if (!res->is_disabled(disabled_resources)) {
-      TLOG_DBG(6) << res->UID() << " is not disabled";
-      return false;
-    }
-  }
-  TLOG_DBG(6) << UID() << " is indirectly disabled";
-  return true;
-}
 
 } // namespace dunedaq::confmodel
