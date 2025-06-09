@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="ASCII"?>
+
+<!-- oks-schema version 2.2 -->
+
+
+<!DOCTYPE oks-schema [
+  <!ELEMENT oks-schema (info, (include)?, (comments)?, (class)+)>
+  <!ELEMENT info EMPTY>
+  <!ATTLIST info
+      name CDATA #IMPLIED
+      type CDATA #IMPLIED
+      num-of-items CDATA #REQUIRED
+      oks-format CDATA #FIXED "schema"
+      oks-version CDATA #REQUIRED
+      created-by CDATA #IMPLIED
+      created-on CDATA #IMPLIED
+      creation-time CDATA #IMPLIED
+      last-modified-by CDATA #IMPLIED
+      last-modified-on CDATA #IMPLIED
+      last-modification-time CDATA #IMPLIED
+  >
+  <!ELEMENT include (file)+>
+  <!ELEMENT file EMPTY>
+  <!ATTLIST file
+      path CDATA #REQUIRED
+  >
+  <!ELEMENT comments (comment)+>
+  <!ELEMENT comment EMPTY>
+  <!ATTLIST comment
+      creation-time CDATA #REQUIRED
+      created-by CDATA #REQUIRED
+      created-on CDATA #REQUIRED
+      author CDATA #REQUIRED
+      text CDATA #REQUIRED
+  >
+  <!ELEMENT class (superclass | attribute | relationship | method)*>
+  <!ATTLIST class
+      name CDATA #REQUIRED
+      description CDATA ""
+      is-abstract (yes|no) "no"
+  >
+  <!ELEMENT superclass EMPTY>
+  <!ATTLIST superclass name CDATA #REQUIRED>
+  <!ELEMENT attribute EMPTY>
+  <!ATTLIST attribute
+      name CDATA #REQUIRED
+      description CDATA ""
+      type (bool|s8|u8|s16|u16|s32|u32|s64|u64|float|double|date|time|string|uid|enum|class) #REQUIRED
+      range CDATA ""
+      format (dec|hex|oct) "dec"
+      is-multi-value (yes|no) "no"
+      init-value CDATA ""
+      is-not-null (yes|no) "no"
+      ordered (yes|no) "no"
+  >
+  <!ELEMENT relationship EMPTY>
+  <!ATTLIST relationship
+      name CDATA #REQUIRED
+      description CDATA ""
+      class-type CDATA #REQUIRED
+      low-cc (zero|one) #REQUIRED
+      high-cc (one|many) #REQUIRED
+      is-composite (yes|no) #REQUIRED
+      is-exclusive (yes|no) #REQUIRED
+      is-dependent (yes|no) #REQUIRED
+      ordered (yes|no) "no"
+  >
+  <!ELEMENT method (method-implementation*)>
+  <!ATTLIST method
+      name CDATA #REQUIRED
+      description CDATA ""
+  >
+  <!ELEMENT method-implementation EMPTY>
+  <!ATTLIST method-implementation
+      language CDATA #REQUIRED
+      prototype CDATA #REQUIRED
+      body CDATA ""
+  >
+]>
+
+<oks-schema>
+
+<info name="" type="" num-of-items="8" oks-format="schema" oks-version="862f2957270" created-by="gjc" created-on="latitude" creation-time="20250604T141447" last-modified-by="gjc" last-modified-on="latitude" last-modification-time="20250609T083759"/>
+
+<include>
+ <file path="schema/confmodel/dunedaq.schema.xml"/>
+</include>
+
+
+ <class name="DummyApplication">
+  <superclass name="Application"/>
+  <superclass name="ResourceBase"/>
+ </class>
+
+ <class name="DummyD2D">
+  <superclass name="DetectorToDaqConnection"/>
+  <relationship name="dummy_senders" class-type="DummySender" low-cc="one" high-cc="many" is-composite="yes" is-exclusive="yes" is-dependent="yes"/>
+  <relationship name="dummy_receiver" class-type="DummyReceiver" low-cc="one" high-cc="one" is-composite="yes" is-exclusive="yes" is-dependent="yes"/>
+  <method name="get_senders" description="">
+   <method-implementation language="c++" prototype="virtual std::vector&lt;const DetDataSender*&gt; get_senders() const override" body="  std::vector&lt;const dunedaq::confmodel::DetDataSender*&gt; senders;&#xA;//  auto ds = get_dummy_senders();&#xA;//  senders.insert(senders.begin(), ds.begin(), ds.end());&#xA;  senders.insert(senders.begin(), m_dummy_senders.begin(), m_dummy_senders.end());&#xA;return senders;"/>
+  </method>
+  <method name="get_receiver" description="">
+   <method-implementation language="c++" prototype="const confmodel::DetDataReceiver* get_receiver() const override" body="return m_dummy_receiver;"/>
+  </method>
+ </class>
+
+ <class name="DummyReceiver">
+  <superclass name="DetDataReceiver"/>
+ </class>
+
+ <class name="DummyResource">
+  <superclass name="ResourceBase"/>
+ </class>
+
+ <class name="DummyResourceSet">
+  <superclass name="ResourceSet"/>
+  <relationship name="items" class-type="ResourceBase" low-cc="one" high-cc="many" is-composite="yes" is-exclusive="yes" is-dependent="yes"/>
+  <method name="get_resources" description="">
+   <method-implementation language="c++" prototype="virtual std::vector&lt;const ResourceBase*&gt; get_resources() const" body="BEGIN_PRIVATE_SECTION&#xA;mutable std::vector&lt;const ResourceBase*&gt; m_contents;&#xA;END_PRIVATE_SECTION&#xA;  if (m_contents.empty()) {&#xA;    std::lock_guard scoped_lock(m_mutex);&#xA;    check_init();&#xA;   m_contents.insert(m_contents.begin(), m_items.begin(),m_items.end());&#xA;  }&#xA;  return m_contents;&#xA;"/>
+  </method>
+ </class>
+
+ <class name="DummyResourceSetAND">
+  <superclass name="ResourceSetDisableAND"/>
+  <relationship name="items" class-type="ResourceBase" low-cc="zero" high-cc="many" is-composite="yes" is-exclusive="yes" is-dependent="yes"/>
+  <method name="get_resources" description="">
+   <method-implementation language="c++" prototype="virtual std::vector&lt;const ResourceBase*&gt; get_resources() const" body="BEGIN_PRIVATE_SECTION&#xA;mutable std::vector&lt;const ResourceBase*&gt; m_contents;&#xA;END_PRIVATE_SECTION&#xA;  if (m_contents.empty()) {&#xA;    std::lock_guard scoped_lock(m_mutex);&#xA;    check_init();&#xA;    for (auto item: m_items) {&#xA;      m_contents.push_back(dynamic_cast&lt;const ResourceBase*&gt;(item));&#xA;    }&#xA;  }&#xA;  return m_contents;&#xA;"/>
+  </method>
+ </class>
+
+ <class name="DummySender">
+  <superclass name="DetDataSender"/>
+ </class>
+
+ <class name="DummyStream">
+  <superclass name="DetectorStream"/>
+ </class>
+
+</oks-schema>

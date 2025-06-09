@@ -18,27 +18,35 @@ using namespace dunedaq::confmodel;
 
 DisabledResources::DisabledResources(Session& session)
 {
-  TLOG_DEBUG(2) <<  "construct the object " << (void *)this ;
-  update(session);
+  TLOG_DEBUG(2) <<  "construct the object from Session " << session.UID() ;
+  update(session.get_segment(), session.get_disabled());
 }
 
-void DisabledResources::update(Session& session)
+DisabledResources::DisabledResources(const ResourceSet* root,
+                                     std::vector<const ResourceBase*> initial_list)
 {
+  TLOG_DEBUG(2) <<  "construct the object from Resource " << root->UID() ;
+  update(root, initial_list);
+}
+
+
+void DisabledResources::update(const ResourceSet* root,
+                               std::vector<const ResourceBase*> initial_list) {
+
   m_disabled.clear();
 
-  if (session.get_disabled().empty()) {
-    TLOG_DEBUG( 6) << "Session has no disabled components";
+  if (initial_list.empty()) {
+    TLOG_DEBUG( 6) << "We have no disabled components";
     return;
   }
 
-  // get list of all session's resource-sets also test any
+  // get list of all root's resource-sets also test any
   // circular dependencies between segments and resource sets
-  TestCircularDependency cd_fuse("component \'is-disabled\' status", &session);
+  TestCircularDependency cd_fuse("component \'is-disabled\' status", root);
   std::vector<const ResourceSet*> resource_sets;
-  auto seg = dynamic_cast<const ResourceSet*>(session.get_segment());
-  fill(*seg, resource_sets, cd_fuse);
+  fill(*root, resource_sets, cd_fuse);
 
-  for (auto & comp : session.get_disabled()) {
+  for (auto & comp : initial_list) {
     disable(*comp);
     TLOG_DEBUG(6) << comp->UID() << " is disabled in session";
     if (const ResourceSet * rs = comp->cast<ResourceSet>()) {

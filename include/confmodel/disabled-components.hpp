@@ -45,10 +45,13 @@ namespace dunedaq::confmodel {
     public:
 
       explicit DisabledResources(Session& session);
+      DisabledResources(const ResourceSet* root,
+                        std::vector<const ResourceBase*> initial_list);
 
       ~DisabledResources() = default;
 
-      void update(Session& session);
+      void update(const ResourceSet* root,
+                  std::vector<const ResourceBase*> initial_list);
 
       bool
       is_enabled(const ResourceBase* component) {
