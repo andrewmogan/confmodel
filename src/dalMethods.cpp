@@ -202,6 +202,7 @@ Session::get_enabled_applications() const {
   return apps;
 }
 
+
 // ========================================================================
 
 std::set<const HostComponent*>
@@ -390,6 +391,9 @@ std::string OpMonURI::get_URI( const std::string & /* app */) const {
   return "stdout://";
 }
 
+bool ResourceBase::disabled(const dunedaq::confmodel::Session& session) const {
+  return (!session.m_disabled_components.is_enabled(this));
+}
 bool ResourceBase::is_disabled(const std::set<std::string>& disabled_resources) const {
   TLOG_DEBUG(6) << "No is_disabled method defined for Resource " << class_name();
   if (disabled_resources.contains(UID())) {
@@ -398,28 +402,14 @@ bool ResourceBase::is_disabled(const std::set<std::string>& disabled_resources) 
   return false;
 }
 
-const std::vector<const ResourceBase*>& DetDataSender::get_resources() const {
-  if (m_contents.empty()) {
-    std::lock_guard scoped_lock(m_mutex);
-    check_init();
-    for (auto stream: m_streams) {
-      m_contents.push_back(dynamic_cast<const ResourceBase*>(stream));
-    }
-  }
-  return m_contents;
+std::vector<const ResourceBase*> DetDataSender::get_resources() const {
+  return to_resources(get_streams());
 }
 
-const std::vector<const ResourceBase*>& DetectorToDaqConnection::get_resources() const {
-  TLOG_DBG(6) << "m_contents.size=" << m_contents.size();
-  if (m_contents.empty()) {
-    std::lock_guard scoped_lock(m_mutex);
-    check_init();
-    for (auto res: get_senders()) {
-      m_contents.push_back(res);
-    }
-    m_contents.push_back(get_receiver());
-  }
-  return m_contents;
+std::vector<const ResourceBase*> DetectorToDaqConnection::get_resources() const {
+  auto res = to_resources(get_senders());
+  res.push_back(get_receiver());
+  return res;
 }
 
 
@@ -443,28 +433,20 @@ DetectorToDaqConnection::is_disabled(const std::set<std::string>& disabled_resou
   return false;
 }
 
-const std::vector<const ResourceBase*>&
+std::vector<const ResourceBase*>
 Segment::get_resources() const {
-  TLOG_DBG(6) << "entered: UID=" << UID() << " m_contents.size=" << m_contents.size();
-  if (m_contents.empty()) {
-    std::lock_guard scoped_lock(m_mutex);
-    check_init();
+  std::vector<const ResourceBase*> resources = to_resources(get_segments());
 
-    for (auto app: m_applications) {
-      TLOG_DBG(6) << "Checking " << app->UID();
-      auto res=app->cast<const ResourceBase>();
-      if (res != nullptr) {
-        TLOG_DBG(6) << "Adding " << app->UID();
-        m_contents.push_back(res);
-      }
-    }
-    for (auto seg: m_segments) {
-      TLOG_DBG(6) << "Adding " << seg->UID();
-      m_contents.push_back(seg);
+  for (auto app: get_applications()) {
+    TLOG_DBG(6) << "Checking " << app->UID();
+    auto res=app->cast<const ResourceBase>();
+    if (res != nullptr) {
+      TLOG_DBG(6) << "Adding " << app->UID();
+      resources.push_back(res);
     }
   }
-  TLOG_DBG(6) << "Returning vector of " << m_contents.size() << " resources";
-  return m_contents;
+  TLOG_DBG(6) << "Returning vector of " << resources.size() << " resources";
+  return resources;
 }
 
 
