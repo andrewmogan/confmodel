@@ -80,7 +80,7 @@
 
 <oks-schema>
 
-<info name="" type="" num-of-items="8" oks-format="schema" oks-version="862f2957270" created-by="gjc" created-on="latitude" creation-time="20250604T141447" last-modified-by="gjc" last-modified-on="latitude" last-modification-time="20250609T083759"/>
+<info name="" type="" num-of-items="8" oks-format="schema" oks-version="862f2957270" created-by="gjc" created-on="latitude" creation-time="20250604T141447" last-modified-by="gjc" last-modified-on="latitude" last-modification-time="20250611T095516"/>
 
 <include>
  <file path="schema/confmodel/dunedaq.schema.xml"/>
@@ -97,7 +97,7 @@
   <relationship name="dummy_senders" class-type="DummySender" low-cc="one" high-cc="many" is-composite="yes" is-exclusive="yes" is-dependent="yes"/>
   <relationship name="dummy_receiver" class-type="DummyReceiver" low-cc="one" high-cc="one" is-composite="yes" is-exclusive="yes" is-dependent="yes"/>
   <method name="get_senders" description="">
-   <method-implementation language="c++" prototype="virtual std::vector&lt;const DetDataSender*&gt; get_senders() const override" body="  std::vector&lt;const dunedaq::confmodel::DetDataSender*&gt; senders;&#xA;//  auto ds = get_dummy_senders();&#xA;//  senders.insert(senders.begin(), ds.begin(), ds.end());&#xA;  senders.insert(senders.begin(), m_dummy_senders.begin(), m_dummy_senders.end());&#xA;return senders;"/>
+   <method-implementation language="c++" prototype="virtual std::vector&lt;const DetDataSender*&gt; get_senders() const override" body="  std::vector&lt;const dunedaq::confmodel::DetDataSender*&gt; senders;&#xA;  auto ds = get_dummy_senders();&#xA;  senders.insert(senders.begin(), ds.begin(), ds.end());&#xA;//  senders.insert(senders.begin(), m_dummy_senders.begin(), m_dummy_senders.end());&#xA;return senders;"/>
   </method>
   <method name="get_receiver" description="">
    <method-implementation language="c++" prototype="const confmodel::DetDataReceiver* get_receiver() const override" body="return m_dummy_receiver;"/>
@@ -116,7 +116,7 @@
   <superclass name="ResourceSet"/>
   <relationship name="items" class-type="ResourceBase" low-cc="one" high-cc="many" is-composite="yes" is-exclusive="yes" is-dependent="yes"/>
   <method name="get_resources" description="">
-   <method-implementation language="c++" prototype="virtual std::vector&lt;const ResourceBase*&gt; get_resources() const" body="BEGIN_PRIVATE_SECTION&#xA;mutable std::vector&lt;const ResourceBase*&gt; m_contents;&#xA;END_PRIVATE_SECTION&#xA;  if (m_contents.empty()) {&#xA;    std::lock_guard scoped_lock(m_mutex);&#xA;    check_init();&#xA;   m_contents.insert(m_contents.begin(), m_items.begin(),m_items.end());&#xA;  }&#xA;  return m_contents;&#xA;"/>
+   <method-implementation language="c++" prototype="virtual std::vector&lt;const ResourceBase*&gt; get_resources() const" body="return to_resources(get_items());"/>
   </method>
  </class>
 
@@ -124,7 +124,7 @@
   <superclass name="ResourceSetDisableAND"/>
   <relationship name="items" class-type="ResourceBase" low-cc="zero" high-cc="many" is-composite="yes" is-exclusive="yes" is-dependent="yes"/>
   <method name="get_resources" description="">
-   <method-implementation language="c++" prototype="virtual std::vector&lt;const ResourceBase*&gt; get_resources() const" body="BEGIN_PRIVATE_SECTION&#xA;mutable std::vector&lt;const ResourceBase*&gt; m_contents;&#xA;END_PRIVATE_SECTION&#xA;  if (m_contents.empty()) {&#xA;    std::lock_guard scoped_lock(m_mutex);&#xA;    check_init();&#xA;    for (auto item: m_items) {&#xA;      m_contents.push_back(dynamic_cast&lt;const ResourceBase*&gt;(item));&#xA;    }&#xA;  }&#xA;  return m_contents;&#xA;"/>
+   <method-implementation language="c++" prototype="virtual std::vector&lt;const ResourceBase*&gt; get_resources() const" body="return to_resources(get_items());"/>
   </method>
  </class>
 

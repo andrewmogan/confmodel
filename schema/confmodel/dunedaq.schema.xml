@@ -80,7 +80,7 @@
 
 <oks-schema>
 
-<info name="" type="" num-of-items="48" oks-format="schema" oks-version="862f2957270" created-by="jcfree" created-on="mu2edaq13.fnal.gov" creation-time="20230123T223700" last-modified-by="gjc" last-modified-on="latitude" last-modification-time="20250609T102519"/>
+<info name="" type="" num-of-items="48" oks-format="schema" oks-version="862f2957270" created-by="jcfree" created-on="mu2edaq13.fnal.gov" creation-time="20230123T223700" last-modified-by="gjc" last-modified-on="latitude" last-modification-time="20250611T102711"/>
 
  <class name="ActionPlan" description="A set of parallel steps for an application to carry out a command">
   <attribute name="execution_policy" description="How the application should execute steps of the action plan" type="enum" range="modules-in-parallel,modules-in-series" init-value="modules-in-parallel"/>
@@ -327,7 +327,7 @@
   <attribute name="publish_timeout" type="u32" init-value="2" is-not-null="yes"/>
  </class>
 
- <class name="ResourceBase" description="Base class for all Resource objects. A Resource is an object with an enabled/disabled state.&#xA;Derived classes must implement the is_disabled() method to return the state.">
+ <class name="ResourceBase" description="Base class for all Resource objects. A Resource is an object with an enabled/disabled state.&#xA;Derived classes must implement the is_disabled() method to return the state." is-abstract="yes">
   <method name="get_parents" description="The algorithm calculates a vector of segments which are parents of given segment.&#xA;If the segment has parents referenced by the partition object, then:&#xA;- in case of C++ it fills the parents parameter; otherwise it throws {@link NotFoundException} exception">
    <method-implementation language="c++" prototype="void get_parents(const dunedaq::confmodel::Session&amp; session, std::list&lt; std::vector&lt;const dunedaq::confmodel::ResourceBase *&gt; &gt;&amp; parents) const" body=""/>
   </method>
