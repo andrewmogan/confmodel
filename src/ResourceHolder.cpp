@@ -6,17 +6,16 @@
 
 #include "logging/Logging.hpp"
 
-#include "test_circular_dependency.hpp"
+#include "confmodel/test_circular_dependency.hpp"
 
 using namespace dunedaq::confmodel;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-using namespace dunedaq::confmodel;
+namespace dunedaq::confmodel {
 
-namespace {
 // fill data from resource sets
-void fill(const ResourceSet& rs,
+void ResourceHolder::fill(const ResourceSet& rs,
           std::vector<const ResourceSet*>& all_resource_sets,
           TestCircularDependency& cd_fuse) {
   TLOG_DEBUG(6) << "rs.UID=" << rs.UID() << ", class=" << rs.class_name();
@@ -33,7 +32,7 @@ void fill(const ResourceSet& rs,
   }
 }
 
-void disable_children(const ResourceSet& rs) {
+void ResourceHolder::disable_children(const ResourceSet& rs) {
   TLOG_DEBUG(6) << "Disabling children of " << rs.UID();
   for (auto & res : rs.get_resources()) {
     TLOG_DEBUG(6) << "Disabling child " << res->UID();
@@ -44,12 +43,6 @@ void disable_children(const ResourceSet& rs) {
   }
 }
 
-} // namespace
-
-ResourceHolder::ResourceHolder(const ResourceSet* root,
-                               std::vector<const ResourceBase*> initial_list) {
-  m_disabled_items = update(root, initial_list);
-}
 
 std::set<std::string> ResourceHolder::update(const ResourceSet* root,
                             std::vector<const ResourceBase*> initial_list) {
@@ -58,7 +51,7 @@ std::set<std::string> ResourceHolder::update(const ResourceSet* root,
 
   if (initial_list.empty()) {
     TLOG_DEBUG( 6) << "We have no disabled components";
-    return;
+    return disabled;
   }
 
   // get list of all root's resource-sets also test any
@@ -103,3 +96,4 @@ std::set<std::string> ResourceHolder::update(const ResourceSet* root,
   return disabled;
 }
 
+} // namespace dunedaq::confmodel

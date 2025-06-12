@@ -1,6 +1,6 @@
 #include "conffwk/DalObject.hpp"
 #include "confmodel/confmodelIssues.hpp"
-#include "test_circular_dependency.hpp"
+#include "confmodel/test_circular_dependency.hpp"
 
 void
 dunedaq::confmodel::TestCircularDependency::push(const dunedaq::conffwk::DalObject * object)

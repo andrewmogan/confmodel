@@ -27,7 +27,7 @@
 #include "confmodel/Service.hpp"
 #include "confmodel/VirtualHost.hpp"
 
-#include "test_circular_dependency.hpp"
+#include "confmodel/test_circular_dependency.hpp"
 
 #include "nlohmann/json.hpp"
 #include "conffwk/ConfigObject.hpp"
@@ -392,7 +392,7 @@ std::string OpMonURI::get_URI( const std::string & /* app */) const {
 }
 
 bool ResourceBase::disabled(const dunedaq::confmodel::Session& session) const {
-  return (!session.m_disabled_components.is_enabled(this));
+  return (!session.m_disabled_items.contains(UID()));
 }
 bool ResourceBase::is_disabled(const std::set<std::string>& disabled_resources) const {
   TLOG_DEBUG(6) << "No is_disabled method defined for Resource " << class_name();
