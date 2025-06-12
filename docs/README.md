@@ -37,20 +37,20 @@ state of the object, for example the **ResourceSetDisableAND** class
 provides an implementation that ANDs together the state of all of its
 contained objects.
 
-A **ResourceSet** is an abstract container of **Resource**s (actually items
+**ResourceSet** is an abstract container of **Resource**s (actually items
 inheriting from **ResourceBase**) which can be disabled together. It
 is itself a Resource (so can be nested). It defines a pure virtual method `get_resources()` to get the list of contained resources. Developers should implement this method to extract any resources that need to be considered for determining the disabled state of the set from among the class's relationships.
 
-A **ResourceSetDisableAND** is a container of **Resource**s which will
+**ResourceSetDisableAND** is a container of **Resource**s which will
 be disabled if *all* of its **Resource**s are disabled. It provides a
 final implementation of the ResourceSet::is_disabled() method.
 
-A **ResourceSetDisableOR** is a container of **Resource**s which
+**ResourceSetDisableOR** is a container of **Resource**s which
 provides a final implementation of the ResourceSet::is_disabled()
 method returning true if *any* of its contained **Resource**s are
 disabled.
 
-A **Segment** is a container of **Segment**s and **Applications**
+**Segment** is a container of **Segment**s and **Applications**
 which inherits from **ResourceSetDisableAND** so it can be disabled
 directly or indirectly if all its components are disabled.
  
@@ -61,7 +61,7 @@ The Resource disabled logic works on a single tree of **ResourceSets**
 and is currently tied to the **Session**
 object. The constructor of the **Session** object constructs a
 **DisabledResources** object passing a reference to itself.
-**Any ResourceSet that is not referenced by a ResourceSet in the tree
+⚠️**Any ResourceSet that is not referenced by a ResourceSet in the tree
 starting at the Session's segment relationship will not be considered
 by the disabling logic!**
 
