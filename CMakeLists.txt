@@ -15,7 +15,7 @@ find_package(Boost COMPONENTS unit_test_framework REQUIRED)
 
 ##############################################################################
 
-daq_add_dal_library(dunedaq.schema.xml dummy_resource.schema.xml SOURCES dalMethods.cpp test_circular_dependency.cpp disabled-components.cpp LINK_LIBRARIES okssystem::okssystem logging::logging nlohmann_json::nlohmann_json)
+daq_add_dal_library(dunedaq.schema.xml dummy_resource.schema.xml SOURCES dalMethods.cpp test_circular_dependency.cpp ResourceHolder.cpp LINK_LIBRARIES okssystem::okssystem logging::logging nlohmann_json::nlohmann_json)
 
 daq_add_application(listApps list_apps.cxx
   LINK_LIBRARIES confmodel_dal conffwk::conffwk)
