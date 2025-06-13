@@ -1,5 +1,5 @@
-#ifndef DUNEDAQDAL_DISABLED_COMPONENTS_H
-#define DUNEDAQDAL_DISABLED_COMPONENTS_H
+#ifndef DUNEDAQDAL_DISABLED_RESOURCES_H
+#define DUNEDAQDAL_DISABLED_RESOURCES_H
 
 #include "confmodel/ResourceBase.hpp"
 
@@ -54,11 +54,11 @@ namespace dunedaq::confmodel {
                   std::vector<const ResourceBase*> initial_list);
 
       bool
-      is_enabled(const ResourceBase* component) {
+      is_enabled(const ResourceBase* component) const {
         return !m_disabled.contains(component->UID());
       }
 
     };
 } // namespace dunedaq::confmodel
 
-#endif // DUNEDAQDAL_DISABLED_COMPONENTS_H
+#endif // DUNEDAQDAL_DISABLED_RESOURCES_H

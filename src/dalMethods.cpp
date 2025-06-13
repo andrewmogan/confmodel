@@ -392,7 +392,7 @@ std::string OpMonURI::get_URI( const std::string & /* app */) const {
 }
 
 bool ResourceBase::disabled(const dunedaq::confmodel::ResourceHolder& holder) const {
-  return (holder.m_disabled_items.contains(UID()));
+  return (!holder.disabled_components().is_enabled(this));
 }
 bool ResourceBase::is_disabled(const std::set<std::string>& disabled_resources) const {
   TLOG_DEBUG(6) << "No is_disabled method defined for Resource " << class_name();

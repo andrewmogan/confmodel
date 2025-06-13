@@ -80,7 +80,7 @@
 
 <oks-schema>
 
-<info name="" type="" num-of-items="49" oks-format="schema" oks-version="862f2957270" created-by="jcfree" created-on="mu2edaq13.fnal.gov" creation-time="20230123T223700" last-modified-by="gjc" last-modified-on="latitude" last-modification-time="20250613T094727"/>
+<info name="" type="" num-of-items="49" oks-format="schema" oks-version="862f2957270" created-by="jcfree" created-on="mu2edaq13.fnal.gov" creation-time="20230123T223700" last-modified-by="gjc" last-modified-on="latitude" last-modification-time="20250613T142556"/>
 
  <class name="ActionPlan" description="A set of parallel steps for an application to carry out a command">
   <attribute name="execution_policy" description="How the application should execute steps of the action plan" type="enum" range="modules-in-parallel,modules-in-series" init-value="modules-in-parallel"/>
@@ -342,11 +342,8 @@
  <class name="ResourceHolder">
   <relationship name="disabled" description="Resources that should not participate in the current run" class-type="ResourceBase" low-cc="zero" high-cc="many" is-composite="yes" is-exclusive="no" is-dependent="yes"/>
   <relationship name="segment" description="List of configuration Segments that form this Session" class-type="Segment" low-cc="one" high-cc="one" is-composite="yes" is-exclusive="no" is-dependent="yes"/>
-  <method name="is_enabled" description="">
-   <method-implementation language="c++" prototype="bool is_enabled(const ResourceBase* res) const" body="return !m_disabled_items.contains(res-&gt;UID());"/>
-  </method>
-  <method name="update" description="">
-   <method-implementation language="c++" prototype="std::set&lt;std::string&gt; update()" body="BEGIN_PRIVATE_SECTION&#xA;friend class ResourceBase;&#xA;&#xA;std::set&lt;std::string&gt; m_disabled_items;&#xA;&#xA;      void fill(const ResourceSet&amp; rs,&#xA;                std::vector&lt;const ResourceSet*&gt;&amp; all_resource_sets,&#xA;                TestCircularDependency&amp; cd_fuse);&#xA;&#xA;      void disable(const ResourceBase&amp; component) {&#xA;        m_disabled_items.insert(component.UID());&#xA;      }&#xA;&#xA;      void  disable_children(const ResourceSet&amp;);&#xA;&#xA;END_PRIVATE_SECTION&#xA;&#xA;BEGIN_HEADER_PROLOGUE&#xA;#include &lt;set&gt;&#xA;#include &lt;string&gt;&#xA;#include &quot;confmodel/ResourceBase.hpp&quot;&#xA;#include &quot;confmodel/ResourceSet.hpp&quot;&#xA;#include &quot;confmodel/test_circular_dependency.hpp&quot;&#xA;&#xA;namespace dunedaq::confmodel{class ResourceBase;}&#xA;&#xA;END_HEADER_PROLOGUE&#xA;&#xA;BEGIN_MEMBER_INITIALIZER_LIST&#xA;m_disabled_items(update())&#xA;END_MEMBER_INITIALIZER_LIST"/>
+  <method name="disabled_components" description="">
+   <method-implementation language="c++" prototype="const dunedaq::confmodel::DisabledResources&amp; disabled_components() const" body="BEGIN_HEADER_PROLOGUE&#xA;#include &quot;confmodel/DisabledResources.hpp&quot;&#xA;#include &quot;confmodel/ResourceBase.hpp&quot;&#xA;END_HEADER_PROLOGUE&#xA;&#xA;BEGIN_PRIVATE_SECTION&#xA;DisabledResources m_disabled_resources;&#xA;END_PRIVATE_SECTION&#xA;&#xA;BEGIN_MEMBER_INITIALIZER_LIST&#xA;m_disabled_resources(get_segment(),get_disabled())&#xA;END_MEMBER_INITIALIZER_LIST&#xA;&#xA;return m_disabled_resources;"/>
   </method>
  </class>
 

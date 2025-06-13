@@ -5,11 +5,11 @@
 #include "confmodel/Session.hpp"
 
 #include "confmodel/confmodelIssues.hpp"
-#include "confmodel/disabled-components.hpp"
+#include "confmodel/DisabledResources.hpp"
 
 #include "logging/Logging.hpp"
 
-#include "test_circular_dependency.hpp"
+#include "confmodel/test_circular_dependency.hpp"
 
 using namespace dunedaq::confmodel;
 
