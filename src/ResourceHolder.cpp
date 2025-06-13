@@ -1,6 +1,7 @@
 #include "confmodel/ResourceBase.hpp"
 #include "confmodel/ResourceHolder.hpp"
 #include "confmodel/ResourceSet.hpp"
+#include "confmodel/Segment.hpp"
 
 #include "confmodel/confmodelIssues.hpp"
 
@@ -44,8 +45,17 @@ void ResourceHolder::disable_children(const ResourceSet& rs) {
 }
 
 
-std::set<std::string> ResourceHolder::update(const ResourceSet* root,
-                            std::vector<const ResourceBase*> initial_list) {
+std::set<std::string> ResourceHolder::update() {
+  check_init();
+//   update(m_segment, m_disabled);
+// }
+
+  auto initial_list = m_disabled;
+  auto root = dynamic_cast<const ResourceSet*>(m_segment);
+// std::set<std::string> ResourceHolder::update(const ResourceSet* root,
+//                             std::vector<const ResourceBase*> initial_list) {
+
+  TLOG_DEBUG( 6) << "looking for disabled components";
 
   std::set<std::string> disabled;
 
@@ -93,6 +103,7 @@ std::set<std::string> ResourceHolder::update(const ResourceSet* root,
       break;
     }
   }
+  TLOG_DEBUG(6) << "Leaving with " << disabled.size() << " disabled components";
   return disabled;
 }
 

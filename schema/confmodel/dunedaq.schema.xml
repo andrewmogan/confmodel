@@ -80,7 +80,7 @@
 
 <oks-schema>
 
-<info name="" type="" num-of-items="49" oks-format="schema" oks-version="862f2957270" created-by="jcfree" created-on="mu2edaq13.fnal.gov" creation-time="20230123T223700" last-modified-by="gjc" last-modified-on="latitude" last-modification-time="20250612T150811"/>
+<info name="" type="" num-of-items="49" oks-format="schema" oks-version="862f2957270" created-by="jcfree" created-on="mu2edaq13.fnal.gov" creation-time="20230123T223700" last-modified-by="gjc" last-modified-on="latitude" last-modification-time="20250613T094727"/>
 
  <class name="ActionPlan" description="A set of parallel steps for an application to carry out a command">
   <attribute name="execution_policy" description="How the application should execute steps of the action plan" type="enum" range="modules-in-parallel,modules-in-series" init-value="modules-in-parallel"/>
@@ -331,8 +331,8 @@
   <method name="get_parents" description="The algorithm calculates a vector of segments which are parents of given segment.&#xA;If the segment has parents referenced by the partition object, then:&#xA;- in case of C++ it fills the parents parameter; otherwise it throws {@link NotFoundException} exception">
    <method-implementation language="c++" prototype="void get_parents(const dunedaq::confmodel::Session&amp; session, std::list&lt; std::vector&lt;const dunedaq::confmodel::ResourceBase *&gt; &gt;&amp; parents) const" body=""/>
   </method>
-  <method name="disabled(const Session&amp;)" description="">
-   <method-implementation language="c++" prototype="bool disabled(const dunedaq::confmodel::Session&amp; session) const" body=""/>
+  <method name="disabled" description="">
+   <method-implementation language="c++" prototype="bool disabled(const dunedaq::confmodel::ResourceHolder&amp; session) const" body=""/>
   </method>
   <method name="is_disabled" description="Virtual method to be implemented by subclasses containing the logic to determine if this object should be considered disabled.">
    <method-implementation language="c++" prototype="virtual bool is_disabled(const std::set&lt;std::string&gt;&amp;) const" body=""/>
@@ -346,7 +346,7 @@
    <method-implementation language="c++" prototype="bool is_enabled(const ResourceBase* res) const" body="return !m_disabled_items.contains(res-&gt;UID());"/>
   </method>
   <method name="update" description="">
-   <method-implementation language="c++" prototype="std::set&lt;std::string&gt; update(const ResourceSet* root,std::vector&lt;const ResourceBase*&gt; initial_list)" body="BEGIN_PRIVATE_SECTION&#xA;friend class ResourceBase;&#xA;&#xA;std::set&lt;std::string&gt; m_disabled_items;&#xA;&#xA;      void fill(const ResourceSet&amp; rs,&#xA;                std::vector&lt;const ResourceSet*&gt;&amp; all_resource_sets,&#xA;                TestCircularDependency&amp; cd_fuse);&#xA;&#xA;      void disable(const ResourceBase&amp; component) {&#xA;        m_disabled_items.insert(component.UID());&#xA;      }&#xA;&#xA;      void  disable_children(const ResourceSet&amp;);&#xA;&#xA;END_PRIVATE_SECTION&#xA;&#xA;BEGIN_HEADER_PROLOGUE&#xA;#include &lt;set&gt;&#xA;#include &lt;string&gt;&#xA;#include &quot;confmodel/ResourceBase.hpp&quot;&#xA;#include &quot;confmodel/test_circular_dependency.hpp&quot;&#xA;&#xA;namespace dunedaq::confmodel{class ResourceBase;}&#xA;&#xA;END_HEADER_PROLOGUE&#xA;&#xA;BEGIN_MEMBER_INITIALIZER_LIST&#xA;m_disabled_items(update(m_segment,m_disabled))&#xA;END_MEMBER_INITIALIZER_LIST"/>
+   <method-implementation language="c++" prototype="std::set&lt;std::string&gt; update()" body="BEGIN_PRIVATE_SECTION&#xA;friend class ResourceBase;&#xA;&#xA;std::set&lt;std::string&gt; m_disabled_items;&#xA;&#xA;      void fill(const ResourceSet&amp; rs,&#xA;                std::vector&lt;const ResourceSet*&gt;&amp; all_resource_sets,&#xA;                TestCircularDependency&amp; cd_fuse);&#xA;&#xA;      void disable(const ResourceBase&amp; component) {&#xA;        m_disabled_items.insert(component.UID());&#xA;      }&#xA;&#xA;      void  disable_children(const ResourceSet&amp;);&#xA;&#xA;END_PRIVATE_SECTION&#xA;&#xA;BEGIN_HEADER_PROLOGUE&#xA;#include &lt;set&gt;&#xA;#include &lt;string&gt;&#xA;#include &quot;confmodel/ResourceBase.hpp&quot;&#xA;#include &quot;confmodel/ResourceSet.hpp&quot;&#xA;#include &quot;confmodel/test_circular_dependency.hpp&quot;&#xA;&#xA;namespace dunedaq::confmodel{class ResourceBase;}&#xA;&#xA;END_HEADER_PROLOGUE&#xA;&#xA;BEGIN_MEMBER_INITIALIZER_LIST&#xA;m_disabled_items(update())&#xA;END_MEMBER_INITIALIZER_LIST"/>
   </method>
  </class>
 
@@ -398,8 +398,6 @@
   <attribute name="log_path" description="Where the applications, controllers and infrastructure applications stdout/err go. This is overwritten by the Application&apos;s log_path. If none of them is set, PWD is used." type="string"/>
   <relationship name="connectivity_service" description="Configuration for the Connectivity Service lookups" class-type="ConnectivityService" low-cc="zero" high-cc="one" is-composite="no" is-exclusive="no" is-dependent="no"/>
   <relationship name="environment" description="Define process environment for any application run in given session." class-type="VariableBase" low-cc="zero" high-cc="many" is-composite="no" is-exclusive="no" is-dependent="no"/>
-  <relationship name="disabled" description="Resources that should not participate in the current run" class-type="ResourceBase" low-cc="zero" high-cc="many" is-composite="yes" is-exclusive="no" is-dependent="yes"/>
-  <relationship name="segment" description="List of configuration Segments that form this Session" class-type="Segment" low-cc="one" high-cc="one" is-composite="yes" is-exclusive="no" is-dependent="yes"/>
   <relationship name="infrastructure_applications" class-type="Application" low-cc="zero" high-cc="many" is-composite="yes" is-exclusive="no" is-dependent="yes"/>
   <relationship name="detector_configuration" class-type="DetectorConfig" low-cc="one" high-cc="one" is-composite="no" is-exclusive="no" is-dependent="no"/>
   <relationship name="opmon_uri" description="Configuration for the OpMon facilities used across the session" class-type="OpMonURI" low-cc="one" high-cc="one" is-composite="yes" is-exclusive="no" is-dependent="yes"/>

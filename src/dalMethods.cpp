@@ -189,7 +189,7 @@ Session::getSegmentApps(const Segment* segment,
 std::vector<const Application*>
 Session::get_all_applications() const {
   std::vector<const Application*> apps;
-  auto segapps = getSegmentApps(m_segment, false);
+  auto segapps = getSegmentApps(get_segment(), false);
   apps.insert(apps.end(), segapps.begin(),segapps.end());
   return apps;
 }
@@ -197,7 +197,7 @@ Session::get_all_applications() const {
 std::vector<const Application*>
 Session::get_enabled_applications() const {
   std::vector<const Application*> apps;
-  auto segapps = getSegmentApps(m_segment, true);
+  auto segapps = getSegmentApps(get_segment(), true);
   apps.insert(apps.end(), segapps.begin(),segapps.end());
   return apps;
 }
@@ -391,8 +391,8 @@ std::string OpMonURI::get_URI( const std::string & /* app */) const {
   return "stdout://";
 }
 
-bool ResourceBase::disabled(const dunedaq::confmodel::Session& session) const {
-  return (!session.m_disabled_items.contains(UID()));
+bool ResourceBase::disabled(const dunedaq::confmodel::ResourceHolder& holder) const {
+  return (holder.m_disabled_items.contains(UID()));
 }
 bool ResourceBase::is_disabled(const std::set<std::string>& disabled_resources) const {
   TLOG_DEBUG(6) << "No is_disabled method defined for Resource " << class_name();
