@@ -131,6 +131,7 @@ check_segment(
 }
 } // namespace
 
+
 namespace dunedaq::confmodel {
 
 void
@@ -435,8 +436,10 @@ DetectorToDaqConnection::is_disabled(const std::set<std::string>& disabled_resou
 
 std::vector<const ResourceBase*>
 Segment::get_resources() const {
+  // All our contained segments are resources
   std::vector<const ResourceBase*> resources = to_resources(get_segments());
 
+  // Only a subset of our applications might be resources so check individually
   for (auto app: get_applications()) {
     TLOG_DBG(6) << "Checking " << app->UID();
     auto res=app->cast<const ResourceBase>();
