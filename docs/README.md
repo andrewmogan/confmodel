@@ -1,20 +1,20 @@
 # confmodel
-This package contains the 'core' schema for the DUNE daq OKS configuration.
+This package contains the core' schema for the DUNE daq OKS configuration.
 
   ![schema](schema.png)
 
 The top level of the schema is the **Session** which defines some global
 DAQ parameters and has a relationship to a single top-level **Segment**.
-It also has a list of disabled Resources. It is intended that parts of
+It also has a list of disabled [Resources](#resources-and-resourcesets). It is intended that parts of
 the DAQ system that are not required in the current run are simply
 disabled rather than deleted from the database altogether.
 
 A **Segment** is a logical grouping of applications which
-are controlled by a single controller. A **Segment** may contain other
-nested **Segment**s. A **Segment** is a Resource that can be enabled/disabled,
+are controlled by a single controller (**RCApplication**). A **Segment** may contain other
+nested **Segment**s. A **Segment** is a Resource that can be enabled/disabled [(see below)](#resources-and-resourcesets),
 disabling a **Segment** disables all of its nested **Segment**s.
 
-The **Application** class has attibutes defining the application's
+The **Application** class has attributes defining the application's
  `application_name` (executable name) and `commandline_parameters`. Its
  `application_environment` relationship lists environment variables needed by the
  application in addition to those defined by the **Session**. An
@@ -28,11 +28,11 @@ The **Application** class has attibutes defining the application's
 **ResourceBase** is an abstract class describing an item that can be
 disabled directly. It has the method `disabled()` which can be called
 by application code to determine if the object should be considered
-disabled for this session. The disablng logic calls the virtual
+disabled for this session. The [disabling logic](#the-resource-disabled-logic) calls the virtual
 `is_disabled()` method to determine the state of the Resource. The
 implementation provided by the base class just checks that the object
 itself is not in the list of disabled objects. Derived classes can
-reimplement this method with whatever logic is needed to determine the
+re-implement this method with whatever logic is needed to determine the
 state of the object, for example the **ResourceSetDisableAND** class
 provides an implementation that ANDs together the state of all of its
 contained objects.
@@ -56,7 +56,7 @@ which inherits from **ResourceSetDisableAND** so it can be disabled
 directly or indirectly if all its components are disabled.
  
 
-## The Resource disabled logic
+### The Resource disabled logic
 
 The Resource disabled logic works on a single tree of **ResourceSets**
 and is currently tied to the **Session**
@@ -89,14 +89,23 @@ that ends with the same number of disabled resources it started with.
 (the blue classes in the diagram are not part of confmodel and are
 there to show how the other parts fit together)
 
-The detector to DAQ connections are described using different types of **Resources**.
+The readout map is defined in terms of **DetectorStream** objects
+which define a one to one mapping between a source_id and a
+ **GeoID" object. A collection of streams are
+aggregated into a **DetDataSender** and a group of **DetDataSender**
+objects are contained in a **DetectorToDaqConnection** along with a
+single **DetDataReceiver**.
+
+### Resource handling in the readout map
+
 The **DetectorToDaqConnection** is a **ResourceSet** with a custom implementation of `is_disabled()` that checks that the **DetDataReceiver** and at least one **DetDataSender** are enabled.
 
-Each **DetDataSender** contains a set of **DetectorStream**s, which consist of a **Resource** associated to one **GeoId**.
+The **DetDataSender** is a **ResourceSetDisableAND** that contains a set of **DetectorStream** **Resource**s.
+
 
 
 ## Finite State Machines
-Each controller (**RCApplication**) uses one **FSMConfiguration** object that describes action, trasnisions and sequences.
+Each controller (**RCApplication**) uses one **FSMConfiguration** object that describes action, transitions and sequences.
 
  ![FSM schema](fsm.png)
 
@@ -104,7 +113,7 @@ Each controller (**RCApplication**) uses one **FSMConfiguration** object that de
 
 ### VirtualHost
 
- The idea is that this decribes the subset of resources of a physical
+ The idea is that this describes the subset of resources of a physical
 host server that are available to an Application. For example two
 applications may be assigned to the same physical server but each be
 allocated resources of a different NUMA node.
@@ -119,3 +128,4 @@ comparing with those listed in its `hw_resources` relationship.
 
 ### NetworkConnection
   Describes the connection type and points to the **Service** running over this connection.
+
