@@ -157,8 +157,8 @@
  <class name="DetDataSender" is-abstract="yes">
   <superclass name="ResourceSetDisableAND"/>
   <relationship name="streams" class-type="DetectorStream" low-cc="one" high-cc="many" is-composite="no" is-exclusive="yes" is-dependent="no"/>
-  <method name="get_resources" description="">
-   <method-implementation language="c++" prototype="virtual std::vector&lt;const Resource*&gt; get_resources() const override" body=""/>
+  <method name="contained_resources" description="">
+   <method-implementation language="c++" prototype="virtual std::vector&lt;const Resource*&gt; contained_resources() const override" body=""/>
   </method>
  </class>
 
@@ -180,14 +180,14 @@
   <method name="get_streams" description="">
    <method-implementation language="c++" prototype="std::vector&lt;const confmodel::DetectorStream*&gt; get_streams() const" body=""/>
   </method>
-  <method name="get_resources" description="">
-   <method-implementation language="c++" prototype="virtual std::vector&lt;const Resource*&gt; get_resources() const override" body=""/>
+  <method name="contained_resources" description="">
+   <method-implementation language="c++" prototype="virtual std::vector&lt;const Resource*&gt; contained_resources() const override" body=""/>
   </method>
-  <method name="get_senders" description="Pure virtual method to get vector of DataSenders">
-   <method-implementation language="c++" prototype="virtual std::vector&lt;const DetDataSender*&gt; get_senders() const = 0" body=""/>
+  <method name="senders" description="Pure virtual method to get vector of DataSenders">
+   <method-implementation language="c++" prototype="virtual std::vector&lt;const DetDataSender*&gt; senders() const = 0" body=""/>
   </method>
-  <method name="get_receiver" description="Pure virtual method to get DataReceiver associated with this connection">
-   <method-implementation language="c++" prototype="virtual const DetDataReceiver* get_receiver() const = 0" body=""/>
+  <method name="receiver" description="Pure virtual method to get DataReceiver associated with this connection">
+   <method-implementation language="c++" prototype="virtual const DetDataReceiver* receiver() const = 0" body=""/>
   </method>
   <method name="compute_disabled_state" description="Custom implementation of method for DetectorToDaqConnection. Must AND the senders and OR the seult with the receiver.">
    <method-implementation language="c++" prototype="bool compute_disabled_state(const std::set&lt;std::string&gt;&amp; disabled) const final" body=""/>
@@ -328,8 +328,8 @@
  </class>
 
  <class name="Resource" description="Base class for all Resource objects. A Resource is an object with an enabled/disabled state.&#xA;Derived classes must implement the compute_disabled_state() method to return the state." is-abstract="yes">
-  <method name="get_parents" description="The algorithm calculates a vector of segments which are parents of given segment.&#xA;If the segment has parents referenced by the partition object, then:&#xA;- in case of C++ it fills the parents parameter; otherwise it throws {@link NotFoundException} exception">
-   <method-implementation language="c++" prototype="void get_parents(const dunedaq::confmodel::Session&amp; session, std::list&lt; std::vector&lt;const dunedaq::confmodel::Resource *&gt; &gt;&amp; parents) const" body=""/>
+  <method name="parents" description="The algorithm calculates a vector of segments which are parents of given segment.&#xA;If the segment has parents referenced by the partition object, then:&#xA;- in case of C++ it fills the parents parameter; otherwise it throws {@link NotFoundException} exception">
+   <method-implementation language="c++" prototype="void parents(const dunedaq::confmodel::Session&amp; session, std::list&lt; std::vector&lt;const dunedaq::confmodel::Resource *&gt; &gt;&amp; parents) const" body=""/>
   </method>
   <method name="is_disabled" description="">
    <method-implementation language="c++" prototype="bool is_disabled(const dunedaq::confmodel::ResourceTree&amp; session) const" body=""/>
@@ -339,24 +339,24 @@
   </method>
  </class>
 
- <class name="ResourceSet" description="Base class for a collection of Resource items. Derived classes must implement the get_resources() method to return a vector of Resource objects." is-abstract="yes">
+ <class name="ResourceSet" description="Base class for a collection of Resource items. Derived classes must implement the contained_resources() method to return a vector of Resource objects." is-abstract="yes">
   <superclass name="Resource"/>
-  <method name="get_resources" description="Virtual method to obtain the list of all contained Resources. Used internally by the core disabled logic. Not intended to be used in application code as that should be using individual relationships of the derived classes.">
-   <method-implementation language="c++" prototype="virtual std::vector&lt;const Resource*&gt; get_resources() const = 0" body="BEGIN_HEADER_EPILOGUE&#xA;template&lt;typename T&gt;&#xA;std::vector&lt;const dunedaq::confmodel::Resource*&gt; to_resources( const std::vector&lt;T*&gt;&amp; vector_of_children ) {&#xA;  std::vector&lt;const dunedaq::confmodel::Resource*&gt; resources;&#xA;  resources.reserve(vector_of_children.size());&#xA;&#xA;  std::copy(vector_of_children.begin(), vector_of_children.end(), std::back_inserter(resources));&#xA;&#xA;  return resources;&#xA;&#xA;}&#xA;END_HEADER_EPILOGUE"/>
+  <method name="contained_resources" description="Virtual method to obtain the list of all contained Resources. Used internally by the core disabled logic. Not intended to be used in application code as that should be using individual relationships of the derived classes.">
+   <method-implementation language="c++" prototype="virtual std::vector&lt;const Resource*&gt; contained_resources() const = 0" body="BEGIN_HEADER_EPILOGUE&#xA;template&lt;typename T&gt;&#xA;std::vector&lt;const dunedaq::confmodel::Resource*&gt; to_resources( const std::vector&lt;T*&gt;&amp; vector_of_children ) {&#xA;  std::vector&lt;const dunedaq::confmodel::Resource*&gt; resources;&#xA;  resources.reserve(vector_of_children.size());&#xA;&#xA;  std::copy(vector_of_children.begin(), vector_of_children.end(), std::back_inserter(resources));&#xA;&#xA;  return resources;&#xA;&#xA;}&#xA;END_HEADER_EPILOGUE"/>
   </method>
  </class>
 
  <class name="ResourceSetDisableAND" description="Abstract base class for a resource set that determines it&apos;s disabled state by ANDing all its contained resources." is-abstract="yes">
   <superclass name="ResourceSet"/>
   <method name="compute_disabled_state" description="Method that ANDs all resources to determine disabled state.">
-   <method-implementation language="c++" prototype="bool compute_disabled_state(const std::set&lt;std::string&gt;&amp; disabled) const final" body="  if (disabled.contains(UID())) {&#xA;    return true;&#xA;  }&#xA;  for (auto res: get_resources()) {&#xA;     if (!res-&gt;compute_disabled_state(disabled)) {&#xA;        return false;&#xA;    }&#xA;  }&#xA;  return true;&#xA;  "/>
+   <method-implementation language="c++" prototype="bool compute_disabled_state(const std::set&lt;std::string&gt;&amp; disabled) const final" body="  if (disabled.contains(UID())) {&#xA;    return true;&#xA;  }&#xA;  for (auto res: contained_resources()) {&#xA;     if (!res-&gt;compute_disabled_state(disabled)) {&#xA;        return false;&#xA;    }&#xA;  }&#xA;  return true;&#xA;  "/>
   </method>
  </class>
 
  <class name="ResourceSetDisableOR" is-abstract="yes">
   <superclass name="ResourceSet"/>
   <method name="compute_disabled_state" description="Method that ORs the disabled state of its contained resources to determine the state of the set">
-   <method-implementation language="c++" prototype="bool compute_disabled_state(const std::set&lt;std::string&gt;&amp; disabled) const final" body="  if (disabled.contains(UID())) {&#xA;    return true;&#xA;  }&#xA;  for (auto res: get_resources()) {&#xA;     if (res-&gt;compute_disabled_state(disabled)) {&#xA;        return true;&#xA;    }&#xA;  }&#xA;  return false;&#xA;  "/>
+   <method-implementation language="c++" prototype="bool compute_disabled_state(const std::set&lt;std::string&gt;&amp; disabled) const final" body="  if (disabled.contains(UID())) {&#xA;    return true;&#xA;  }&#xA;  for (auto res: contained_resources()) {&#xA;     if (res-&gt;compute_disabled_state(disabled)) {&#xA;        return true;&#xA;    }&#xA;  }&#xA;  return false;&#xA;  "/>
   </method>
  </class>
 
@@ -375,8 +375,8 @@
   <relationship name="segments" description="Nested list of Segments that form part of this Segment" class-type="Segment" low-cc="zero" high-cc="many" is-composite="yes" is-exclusive="no" is-dependent="yes"/>
   <relationship name="applications" description="List of Applications that run in this Segment" class-type="Application" low-cc="zero" high-cc="many" is-composite="yes" is-exclusive="yes" is-dependent="yes"/>
   <relationship name="controller" description="This Segment&apos;s run controller." class-type="RCApplication" low-cc="one" high-cc="one" is-composite="yes" is-exclusive="yes" is-dependent="yes"/>
-  <method name="get_resources" description="">
-   <method-implementation language="c++" prototype="virtual std::vector&lt;const Resource*&gt; get_resources() const" body=""/>
+  <method name="contained_resources" description="">
+   <method-implementation language="c++" prototype="virtual std::vector&lt;const Resource*&gt; contained_resources() const" body=""/>
   </method>
  </class>
 
@@ -401,11 +401,11 @@
   <relationship name="infrastructure_applications" class-type="Application" low-cc="zero" high-cc="many" is-composite="yes" is-exclusive="no" is-dependent="yes"/>
   <relationship name="detector_configuration" class-type="DetectorConfig" low-cc="one" high-cc="one" is-composite="no" is-exclusive="no" is-dependent="no"/>
   <relationship name="opmon_uri" description="Configuration for the OpMon facilities used across the session" class-type="OpMonURI" low-cc="one" high-cc="one" is-composite="yes" is-exclusive="no" is-dependent="yes"/>
-  <method name="get_all_applications" description="Returns applications defined in the Session and all of its Segments.">
-   <method-implementation language="c++" prototype="std::vector&lt;const dunedaq::confmodel::Application *&gt; get_all_applications() const" body="BEGIN_PRIVATE_SECTION&#xA;friend class DisabledResources;&#xA;std::vector&lt;const Application*&gt;getSegmentApps(const Segment*,bool)const;&#xA;END_PRIVATE_SECTION&#xA;&#xA;BEGIN_HEADER_PROLOGUE&#xA;namespace dunedaq::confmodel{class Segment;}&#xA;END_HEADER_PROLOGUE"/>
+  <method name="all_applications" description="Returns applications defined in the Session and all of its Segments.">
+   <method-implementation language="c++" prototype="std::vector&lt;const dunedaq::confmodel::Application *&gt; all_applications() const" body="BEGIN_PRIVATE_SECTION&#xA;friend class DisabledResources;&#xA;std::vector&lt;const Application*&gt;getSegmentApps(const Segment*,bool)const;&#xA;END_PRIVATE_SECTION&#xA;&#xA;BEGIN_HEADER_PROLOGUE&#xA;namespace dunedaq::confmodel{class Segment;}&#xA;END_HEADER_PROLOGUE"/>
   </method>
-  <method name="get_enabled_applications" description="Returns all enabled applications defined in the Session and all of its Segments.">
-   <method-implementation language="c++" prototype="std::vector&lt;const dunedaq::confmodel::Application *&gt; get_enabled_applications() const" body=""/>
+  <method name="enabled_applications" description="Returns all enabled applications defined in the Session and all of its Segments.">
+   <method-implementation language="c++" prototype="std::vector&lt;const dunedaq::confmodel::Application *&gt; enabled_applications() const" body=""/>
   </method>
   <method name="resource_root" description="">
    <method-implementation language="c++" prototype="const ResourceSet* resource_root() const override" body="return get_segment();"/>

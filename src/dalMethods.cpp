@@ -63,7 +63,7 @@ make_parents_list(
   p_list.push_back(resource_set);
 
   // check if the application is in the resource relationship, i.e. is a resource or belongs to resource set(s)
-  for (const auto& i : resource_set->get_resources()) {
+  for (const auto& i : resource_set->contained_resources()) {
     if (i->config_object().implementation() == child) {
       out.push_back(p_list);
     }
@@ -135,7 +135,7 @@ check_segment(
 namespace dunedaq::confmodel {
 
 void
-Resource::get_parents(
+Resource::parents(
   const Session& session,
   std::list<std::vector<const Resource *>>& parents) const
 {
@@ -188,7 +188,7 @@ Session::getSegmentApps(const Segment* segment,
 }
 
 std::vector<const Application*>
-Session::get_all_applications() const {
+Session::all_applications() const {
   std::vector<const Application*> apps;
   auto segapps = getSegmentApps(get_segment(), false);
   apps.insert(apps.end(), segapps.begin(),segapps.end());
@@ -196,7 +196,7 @@ Session::get_all_applications() const {
 }
 
 std::vector<const Application*>
-Session::get_enabled_applications() const {
+Session::enabled_applications() const {
   std::vector<const Application*> apps;
   auto segapps = getSegmentApps(get_segment(), true);
   apps.insert(apps.end(), segapps.begin(),segapps.end());
@@ -371,7 +371,7 @@ std::vector<const confmodel::DetectorStream*>
 DetectorToDaqConnection::get_streams() const {
   std::vector<const confmodel::DetectorStream*> streams;
   // Loop over senders
-  for (auto sender : this->get_senders()) {
+  for (auto sender : this->senders()) {
     auto sender_streams = sender->get_streams();
     streams.insert(streams.end(), sender_streams.begin(), sender_streams.end());
   }
@@ -403,13 +403,13 @@ bool Resource::compute_disabled_state(const std::set<std::string>& disabled_reso
   return false;
 }
 
-std::vector<const Resource*> DetDataSender::get_resources() const {
+std::vector<const Resource*> DetDataSender::contained_resources() const {
   return to_resources(get_streams());
 }
 
-std::vector<const Resource*> DetectorToDaqConnection::get_resources() const {
-  auto res = to_resources(get_senders());
-  res.push_back(get_receiver());
+std::vector<const Resource*> DetectorToDaqConnection::contained_resources() const {
+  auto res = to_resources(senders());
+  res.push_back(receiver());
   return res;
 }
 
@@ -420,22 +420,22 @@ DetectorToDaqConnection::compute_disabled_state(const std::set<std::string>& dis
     return true;
   }
   bool send_disabled = true;
-  for (auto sender: get_senders()) {
+  for (auto sender: senders()) {
     if (!sender->compute_disabled_state(disabled_resources)) {
       send_disabled = false;
       break;
     }
   }
-  TLOG_DBG(6) << "receiver disabled=" << get_receiver()->compute_disabled_state(disabled_resources)
+  TLOG_DBG(6) << "receiver disabled=" << receiver()->compute_disabled_state(disabled_resources)
               << " senders disabled=" << send_disabled;
-  if (get_receiver()->compute_disabled_state(disabled_resources) || send_disabled) {
+  if (receiver()->compute_disabled_state(disabled_resources) || send_disabled) {
     return true;
   }
   return false;
 }
 
 std::vector<const Resource*>
-Segment::get_resources() const {
+Segment::contained_resources() const {
   // All our contained segments are resources
   std::vector<const Resource*> resources = to_resources(get_segments());
 

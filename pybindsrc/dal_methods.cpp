@@ -38,7 +38,7 @@ namespace dunedaq::confmodel::python {
                                const std::string& session_name) {
     auto session=const_cast<Configuration&>(db).get<Session>(session_name);
     std::vector<ObjectLocator> apps;
-    for (auto app : session->get_all_applications()) {
+    for (auto app : session->all_applications()) {
       apps.push_back({app->UID(),app->class_name()});
     }
     return apps;
@@ -49,7 +49,7 @@ namespace dunedaq::confmodel::python {
                                    const std::string& session_name) {
     auto session=const_cast<Configuration&>(db).get<Session>(session_name);
     std::vector<ObjectLocator> apps;
-    for (auto app : session->get_enabled_applications()) {
+    for (auto app : session->enabled_applications()) {
       apps.push_back({app->UID(),app->class_name()});
     }
     return apps;
@@ -76,7 +76,7 @@ namespace dunedaq::confmodel::python {
     std::list<std::vector<const dunedaq::confmodel::Resource*>> parents;
     std::vector<std::vector<ObjectLocator>> parent_ids;
 
-    component_ptr->get_parents(*session_ptr, parents);
+    component_ptr->parents(*session_ptr, parents);
 
     for (const auto& parent : parents) {
       std::vector<ObjectLocator> parents_components;

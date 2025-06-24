@@ -87,7 +87,7 @@ void DisabledResources::fill(const ResourceSet& rs,
   if (rptr->cast<Resource>() == nullptr) {
     throw (MissingConstructor(ERS_HERE, "Resource", rs.full_name()));
   }
-  for (auto & res : rs.get_resources()) {
+  for (auto & res : rs.contained_resources()) {
     AddTestOnCircularDependency add_fuse_test(cd_fuse, res);
     if (const ResourceSet * rs2 = res->cast<ResourceSet>()) {
       fill(*rs2, all_resource_sets, cd_fuse);
@@ -101,7 +101,7 @@ void
 DisabledResources::disable_children(const ResourceSet& rs)
 {
   TLOG_DEBUG(6) << "Disabling children of " << rs.UID();
-  for (auto & res : rs.get_resources()) {
+  for (auto & res : rs.contained_resources()) {
     TLOG_DEBUG(6) << "Disabling child " << res->UID();
     disable(*res);
     if (const auto * rs2 = res->cast<ResourceSet>()) {
