@@ -20,7 +20,7 @@
 #include "confmodel/OpMonURI.hpp"
 #include "confmodel/PhysicalHost.hpp"
 #include "confmodel/RCApplication.hpp"
-#include "confmodel/ResourceBase.hpp"
+#include "confmodel/Resource.hpp"
 #include "confmodel/ResourceSet.hpp"
 #include "confmodel/Segment.hpp"
 #include "confmodel/Session.hpp"
@@ -53,8 +53,8 @@ void
 make_parents_list(
     const ConfigObjectImpl * child,
     const dunedaq::confmodel::ResourceSet * resource_set,
-    std::vector<const dunedaq::confmodel::ResourceBase *> & p_list,
-    std::list< std::vector<const dunedaq::confmodel::ResourceBase *> >& out,
+    std::vector<const dunedaq::confmodel::Resource *> & p_list,
+    std::list< std::vector<const dunedaq::confmodel::Resource *> >& out,
     dunedaq::confmodel::TestCircularDependency& cd_fuse)
 {
   dunedaq::confmodel::AddTestOnCircularDependency add_fuse_test(cd_fuse, resource_set);
@@ -80,8 +80,8 @@ void
 make_parents_list(
     const dunedaq::conffwk::ConfigObjectImpl * child,
     const dunedaq::confmodel::Segment * segment,
-    std::vector<const dunedaq::confmodel::ResourceBase *> & p_list,
-    std::list<std::vector<const dunedaq::confmodel::ResourceBase *> >& out,
+    std::vector<const dunedaq::confmodel::Resource *> & p_list,
+    std::list<std::vector<const dunedaq::confmodel::Resource *> >& out,
     bool is_segment,
     dunedaq::confmodel::TestCircularDependency& cd_fuse)
 {
@@ -114,7 +114,7 @@ make_parents_list(
 
 void
 check_segment(
-    std::list< std::vector<const dunedaq::confmodel::ResourceBase *> >& out,
+    std::list< std::vector<const dunedaq::confmodel::Resource *> >& out,
     const dunedaq::confmodel::Segment * segment,
     const dunedaq::conffwk::ConfigObjectImpl * child,
     bool is_segment,
@@ -122,7 +122,7 @@ check_segment(
 {
   dunedaq::confmodel::AddTestOnCircularDependency add_fuse_test(cd_fuse, segment);
 
-  std::vector<const dunedaq::confmodel::ResourceBase *> compList;
+  std::vector<const dunedaq::confmodel::Resource *> compList;
 
   if (segment->config_object().implementation() == child) {
     out.push_back(compList);
@@ -135,9 +135,9 @@ check_segment(
 namespace dunedaq::confmodel {
 
 void
-ResourceBase::get_parents(
+Resource::get_parents(
   const Session& session,
-  std::list<std::vector<const ResourceBase *>>& parents) const
+  std::list<std::vector<const Resource *>>& parents) const
 {
   const ConfigObjectImpl * obj_impl = config_object().implementation();
 
@@ -152,7 +152,7 @@ ResourceBase::get_parents(
 
 
     if (parents.empty()) {
-      TLOG_DEBUG(1) <<  "cannot find segment/resource path(s) between ResourceBase " << this << " and session " << &session << " objects (check this object is linked with the session as a segment or a resource)" ;
+      TLOG_DEBUG(1) <<  "cannot find segment/resource path(s) between Resource " << this << " and session " << &session << " objects (check this object is linked with the session as a segment or a resource)" ;
     }
   }
   catch (ers::Issue & ex) {
@@ -169,8 +169,8 @@ Session::getSegmentApps(const Segment* segment,
   auto segapps = segment->get_applications();
   if (enabled_only) {
     for (auto app : segapps) {
-      auto comp = app->cast<ResourceBase>();
-      if (comp == nullptr || !comp->disabled(*this)) {
+      auto comp = app->cast<Resource>();
+      if (comp == nullptr || !comp->is_disabled(*this)) {
         apps.insert(apps.end(), app);
       }
     }
@@ -179,7 +179,7 @@ Session::getSegmentApps(const Segment* segment,
     apps.swap(segapps);
   }
   for (auto seg : segment->get_segments()) {
-    if (!enabled_only || !seg->disabled(*this)) {
+    if (!enabled_only || !seg->is_disabled(*this)) {
       auto segapps = getSegmentApps(seg, enabled_only);
       apps.insert(apps.end(), segapps.begin(),segapps.end());
     }
@@ -392,22 +392,22 @@ std::string OpMonURI::get_URI( const std::string & /* app */) const {
   return "stdout://";
 }
 
-bool ResourceBase::disabled(const dunedaq::confmodel::ResourceHolder& holder) const {
+bool Resource::is_disabled(const dunedaq::confmodel::ResourceTree& holder) const {
   return (!holder.disabled_components().is_enabled(this));
 }
-bool ResourceBase::is_disabled(const std::set<std::string>& disabled_resources) const {
-  TLOG_DEBUG(6) << "No is_disabled method defined for Resource " << class_name();
+bool Resource::compute_disabled_state(const std::set<std::string>& disabled_resources) const {
+  TLOG_DEBUG(6) << "No compute_disabled_state method defined for Resource " << class_name();
   if (disabled_resources.contains(UID())) {
     return true;
   }
   return false;
 }
 
-std::vector<const ResourceBase*> DetDataSender::get_resources() const {
+std::vector<const Resource*> DetDataSender::get_resources() const {
   return to_resources(get_streams());
 }
 
-std::vector<const ResourceBase*> DetectorToDaqConnection::get_resources() const {
+std::vector<const Resource*> DetectorToDaqConnection::get_resources() const {
   auto res = to_resources(get_senders());
   res.push_back(get_receiver());
   return res;
@@ -415,34 +415,34 @@ std::vector<const ResourceBase*> DetectorToDaqConnection::get_resources() const 
 
 
 bool
-DetectorToDaqConnection::is_disabled(const std::set<std::string>& disabled_resources) const {
+DetectorToDaqConnection::compute_disabled_state(const std::set<std::string>& disabled_resources) const {
   if (disabled_resources.contains(UID())) {
     return true;
   }
   bool send_disabled = true;
   for (auto sender: get_senders()) {
-    if (!sender->is_disabled(disabled_resources)) {
+    if (!sender->compute_disabled_state(disabled_resources)) {
       send_disabled = false;
       break;
     }
   }
-  TLOG_DBG(6) << "receiver disabled=" << get_receiver()->is_disabled(disabled_resources)
+  TLOG_DBG(6) << "receiver disabled=" << get_receiver()->compute_disabled_state(disabled_resources)
               << " senders disabled=" << send_disabled;
-  if (get_receiver()->is_disabled(disabled_resources) || send_disabled) {
+  if (get_receiver()->compute_disabled_state(disabled_resources) || send_disabled) {
     return true;
   }
   return false;
 }
 
-std::vector<const ResourceBase*>
+std::vector<const Resource*>
 Segment::get_resources() const {
   // All our contained segments are resources
-  std::vector<const ResourceBase*> resources = to_resources(get_segments());
+  std::vector<const Resource*> resources = to_resources(get_segments());
 
   // Only a subset of our applications might be resources so check individually
   for (auto app: get_applications()) {
     TLOG_DBG(6) << "Checking " << app->UID();
-    auto res=app->cast<const ResourceBase>();
+    auto res=app->cast<const Resource>();
     if (res != nullptr) {
       TLOG_DBG(6) << "Adding " << app->UID();
       resources.push_back(res);

@@ -188,7 +188,7 @@ BOOST_AUTO_TEST_CASE(detector_to_daq){
 
   conffwk::ConfigObject conf_obj;
 
-  std::vector<const ResourceBase*> sender0_streams;
+  std::vector<const Resource*> sender0_streams;
   std::vector<const conffwk::ConfigObject*> stream_config_objects;
   for (std::string id : {"dummyStream-0", "dummyStream-1", "dummyStream-2"}) {
     confdb.create(oksfile, "DummyStream", id, conf_obj);
@@ -205,7 +205,7 @@ BOOST_AUTO_TEST_CASE(detector_to_daq){
   sender_conf_objs.push_back(&sender0_dal->config_object());
 
 
-  std::vector<const ResourceBase*> sender1_streams;
+  std::vector<const Resource*> sender1_streams;
   stream_config_objects.clear();
   for (std::string id : {"dummyStream-3", "dummyStream-4", "dummyStream-5"}) {
     confdb.create(oksfile, "DummyStream", id, conf_obj);
@@ -247,7 +247,7 @@ BOOST_AUTO_TEST_CASE(detector_to_daq){
   BOOST_CHECK( !dr.is_enabled(d2d_dal) );
 
   
-  std::vector<const ResourceBase*> disable = sender0_streams;
+  std::vector<const Resource*> disable = sender0_streams;
   // All streams of sender0 disabled - disables sender0
   dr.update(root, disable);
   BOOST_CHECK( dr.is_enabled(d2d_dal) );

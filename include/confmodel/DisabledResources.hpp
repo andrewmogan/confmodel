@@ -1,7 +1,7 @@
 #ifndef DUNEDAQDAL_DISABLED_RESOURCES_H
 #define DUNEDAQDAL_DISABLED_RESOURCES_H
 
-#include "confmodel/ResourceBase.hpp"
+#include "confmodel/Resource.hpp"
 
 #include <set>
 #include <string>
@@ -17,18 +17,18 @@ namespace dunedaq::confmodel {
     {
 
       friend class Session;
-      friend class ResourceBase;
+      friend class Resource;
 
     private:
 
       std::set<std::string> m_disabled;
-
+      bool m_initialised{false};
       void fill(const ResourceSet& rs,
                 std::vector<const ResourceSet*>& all_resource_sets,
                 TestCircularDependency& cd_fuse);
 
       void
-      disable(const ResourceBase& component)
+      disable(const Resource& component)
       {
         m_disabled.insert(component.UID());
       }
@@ -44,20 +44,21 @@ namespace dunedaq::confmodel {
 
     public:
 
-      explicit DisabledResources(Session& session);
+      DisabledResources() = default;
       DisabledResources(const ResourceSet* root,
-                        std::vector<const ResourceBase*> initial_list);
+                        std::vector<const Resource*> initial_list);
 
       ~DisabledResources() = default;
 
       void update(const ResourceSet* root,
-                  std::vector<const ResourceBase*> initial_list);
+                  std::vector<const Resource*> initial_list);
 
       bool
-      is_enabled(const ResourceBase* component) const {
+      is_enabled(const Resource* component) const {
         return !m_disabled.contains(component->UID());
       }
 
+      [[nodiscard]] bool initialised() const {return m_initialised;}
     };
 } // namespace dunedaq::confmodel
 

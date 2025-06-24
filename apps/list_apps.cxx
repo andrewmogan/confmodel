@@ -21,7 +21,7 @@ void process_segment(const Session* session,
                      const std::set<std::string>& disabled_objects,
                      std::string spacer) {
   std::cout << spacer << "Segment " << segment->UID();
-  bool segment_disabled = segment->disabled(*session);
+  bool segment_disabled = segment->is_disabled(*session);
   std::string reason = "";
   if (segment_disabled) {
     std::cout << " disabled";
@@ -38,7 +38,7 @@ void process_segment(const Session* session,
     if (!disabled) {
       auto rset = app->cast<ResourceSet>();
       if (rset) {
-        if (rset->disabled(*session)) {
+        if (rset->is_disabled(*session)) {
           disabled = true;
           if (disabled_objects.find(app->UID()) != disabled_objects.end()) {
             reason = "directly";
@@ -51,7 +51,7 @@ void process_segment(const Session* session,
         std::string seperator = "";
         for (auto mod : rset->get_resources()) {
           std::cout << seperator << mod->UID();
-          if (mod->disabled(*session)) {
+          if (mod->is_disabled(*session)) {
             std::cout << "<disabled ";
             if (disabled_objects.find(mod->UID()) == disabled_objects.end()) {
               std::cout << "in";

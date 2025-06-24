@@ -1,5 +1,5 @@
 #include "confmodel/Application.hpp"
-#include "confmodel/ResourceBase.hpp"
+#include "confmodel/Resource.hpp"
 #include "confmodel/ResourceSet.hpp"
 #include "confmodel/Segment.hpp"
 #include "confmodel/Session.hpp"
@@ -16,14 +16,8 @@ using namespace dunedaq::confmodel;
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-DisabledResources::DisabledResources(Session& session)
-{
-  TLOG_DEBUG(2) <<  "construct the object from Session " << session.UID() ;
-  update(session.get_segment(), session.get_disabled());
-}
-
 DisabledResources::DisabledResources(const ResourceSet* root,
-                                     std::vector<const ResourceBase*> initial_list)
+                                     std::vector<const Resource*> initial_list)
 {
   TLOG_DEBUG(2) <<  "construct the object from Resource " << root->UID() ;
   update(root, initial_list);
@@ -31,10 +25,11 @@ DisabledResources::DisabledResources(const ResourceSet* root,
 
 
 void DisabledResources::update(const ResourceSet* root,
-                               std::vector<const ResourceBase*> initial_list) {
+                               std::vector<const Resource*> initial_list) {
 
   m_disabled.clear();
 
+  m_initialised = true;
   if (initial_list.empty()) {
     TLOG_DEBUG( 6) << "We have no disabled components";
     return;
@@ -60,7 +55,7 @@ void DisabledResources::update(const ResourceSet* root,
     TLOG_DEBUG(6) <<  "before auto-disabling iteration " << count << " the number of disabled components is " << num ;
     for (const auto& res_set : resource_sets) {
       if (is_enabled(res_set)) {
-        if (res_set->is_disabled(m_disabled)) {
+        if (res_set->compute_disabled_state(m_disabled)) {
           TLOG_DEBUG(6) <<  "disable custom resource-set- " << res_set->UID() << " because children are disabled" ;
           disable(*res_set);
           disable_children(*res_set);
@@ -89,8 +84,8 @@ void DisabledResources::fill(const ResourceSet& rs,
   TLOG_DEBUG(6) << "rs.UID=" << rs.UID() << ", class=" << rs.class_name();
   all_resource_sets.push_back(&rs);
   auto rptr = &rs;
-  if (rptr->cast<ResourceBase>() == nullptr) {
-    throw (MissingConstructor(ERS_HERE, "ResourceBase", rs.full_name()));
+  if (rptr->cast<Resource>() == nullptr) {
+    throw (MissingConstructor(ERS_HERE, "Resource", rs.full_name()));
   }
   for (auto & res : rs.get_resources()) {
     AddTestOnCircularDependency add_fuse_test(cd_fuse, res);

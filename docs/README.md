@@ -22,7 +22,7 @@ The **Application** class has attributes defining the application's
 
 ## Resources and ResourceSets
 
-**ResourceBase** is an abstract class describing an item that can be
+**Resource** is an abstract class describing an item that can be
 disabled directly. It has the method `disabled()` which can be called
 by application code to determine if the object should be considered
 disabled for this session. The [disabling logic](#the-resource-disabled-logic) calls the virtual
@@ -34,8 +34,7 @@ state of the object, for example the **ResourceSetDisableAND** class
 provides an implementation that ANDs together the state of all of its
 contained objects.
 
-**ResourceSet** is an abstract container of **Resource**s (actually items
-inheriting from **ResourceBase**) which can be disabled together. It
+**ResourceSet** is an abstract container of **Resource**s which can be disabled together. It
 is itself a Resource (so can be nested). It defines a pure virtual method `get_resources()` to get the list of contained resources. Developers should implement this method to extract any resources that need to be considered for determining the disabled state of the set from among the class's relationships. The class may have relationships to other Resource derived
 objects that will be ignored for the disabled check.
 
@@ -55,11 +54,12 @@ directly or indirectly if all its components are disabled.
 
 ### The Resource disabled logic
 
-The Resource disabled logic works on a single tree of **ResourceSets**
-and is currently tied to the **Session**
-object. The constructor of the **Session**'s **ResourceHolder** object constructs a
-**DisabledResources** object passing a reference to the root **Segment**
+The Resource disabled logic works on a single tree of **ResourceSets**.
+It is held by the virtual class **ResourceTree** currently **Session**
+is the only concrete class derived from it. 
+The **ResourceTree** holds a **DisabledResources** object which is initialised with a reference to the root **Segment**
 and the list of disabled resources from its `disabled` relationship.
+
 ⚠️**Any ResourceSet that is not referenced by a ResourceSet in the tree
 starting at the Session's segment relationship will not be considered
 by the disabling logic!**

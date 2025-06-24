@@ -59,11 +59,11 @@ namespace dunedaq::confmodel::python {
                           const std::string& session_id,
                           const std::string& component_id) {
     const dunedaq::confmodel::Session* session_ptr = const_cast<Configuration&>(db).get<dunedaq::confmodel::Session>(session_id);
-    const dunedaq::confmodel::ResourceBase* component_ptr = const_cast<Configuration&>(db).get<dunedaq::confmodel::ResourceBase>(component_id);
+    const dunedaq::confmodel::Resource* component_ptr = const_cast<Configuration&>(db).get<dunedaq::confmodel::Resource>(component_id);
     if (component_ptr == nullptr) {
       return false;
     }
-    return component_ptr->disabled(*session_ptr);
+    return component_ptr->is_disabled(*session_ptr);
   }
 
 
@@ -71,9 +71,9 @@ namespace dunedaq::confmodel::python {
                                                                 const std::string& session_id,
                                                                 const std::string& component_id) {
     const dunedaq::confmodel::Session* session_ptr = const_cast<Configuration&>(db).get<dunedaq::confmodel::Session>(session_id);
-    const dunedaq::confmodel::ResourceBase* component_ptr = const_cast<Configuration&>(db).get<dunedaq::confmodel::ResourceBase>(component_id);
+    const dunedaq::confmodel::Resource* component_ptr = const_cast<Configuration&>(db).get<dunedaq::confmodel::Resource>(component_id);
 
-    std::list<std::vector<const dunedaq::confmodel::ResourceBase*>> parents;
+    std::list<std::vector<const dunedaq::confmodel::Resource*>> parents;
     std::vector<std::vector<ObjectLocator>> parent_ids;
 
     component_ptr->get_parents(*session_ptr, parents);
@@ -126,8 +126,8 @@ register_dal_methods(py::module& m)
   m.def("session_get_all_applications", &session_get_all_applications, "Get list of ALL applications (regardless of enabled/disabled state) in the requested session");
   m.def("session_get_enabled_applications", &session_get_enabled_applications, "Get list of enabled applications in the requested session");
 
-  m.def("component_disabled", &component_disabled, "Determine if a ResourceBase-derived object (e.g. a Segment) has been disabled");
-  m.def("component_get_parents", &component_get_parents, "Get the ResourceBase-derived class instances of the parent(s) of the ResourceBase-derived object in question");
+  m.def("component_disabled", &component_disabled, "Determine if a Resource-derived object (e.g. a Segment) has been disabled");
+  m.def("component_get_parents", &component_get_parents, "Get the Resource-derived class instances of the parent(s) of the Resource-derived object in question");
   m.def("daqapp_get_used_resources", &daq_application_get_used_hostresources, "Get list of HostResources used by DAQApplication");
   m.def("daq_application_construct_commandline_parameters", &daq_application_construct_commandline_parameters, "Get a version of the command line agruments parsed");
   m.def("rc_application_construct_commandline_parameters", &rc_application_construct_commandline_parameters, "Get a version of the command line agruments parsed");
