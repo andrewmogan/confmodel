@@ -12,6 +12,10 @@
 
 #include "confmodel/Application.hpp"
 #include "confmodel/DaqApplication.hpp"
+#include "confmodel/DetectorToDaqConnection.hpp"
+#include "confmodel/DetectorStream.hpp"
+#include "confmodel/DetDataReceiver.hpp"
+#include "confmodel/DetDataSender.hpp"
 #include "confmodel/HostComponent.hpp"
 #include "confmodel/RCApplication.hpp"
 #include "confmodel/Session.hpp"
@@ -114,6 +118,45 @@ namespace dunedaq::confmodel::python {
     const auto* session = const_cast<Configuration&>(db).get<dunedaq::confmodel::Session>(session_id);
     return app->construct_commandline_parameters(db, session);
   }
+
+
+  std::string d2d_receiver(const Configuration& db,
+                           const std::string& d2d_id) {
+    const auto* d2d = const_cast<Configuration&>(db)
+      .get<dunedaq::confmodel::DetectorToDaqConnection>(d2d_id);
+    if (d2d == nullptr) {
+      return "";
+    }
+    return d2d->receiver()->UID();
+  }
+
+  std::vector<std::string> d2d_senders(const Configuration& db,
+                                       const std::string& d2d_id) {
+    std::vector<std::string> senders;
+    const auto* d2d = const_cast<Configuration&>(db)
+      .get<dunedaq::confmodel::DetectorToDaqConnection>(d2d_id);
+    if (d2d != nullptr) {
+      for (auto sender: d2d->senders()) {
+        senders.push_back(sender->UID());
+      }
+    }
+    return senders;
+  }
+
+  std::vector<std::string> d2d_streams(const Configuration& db,
+                                       const std::string& d2d_id) {
+    std::vector<std::string> streams;
+    const auto* d2d = const_cast<Configuration&>(db)
+      .get<dunedaq::confmodel::DetectorToDaqConnection>(d2d_id);
+    if (d2d != nullptr) {
+      for (auto stream: d2d->streams()) {
+        streams.push_back(stream->UID());
+      }
+    }
+    return streams;
+  }
+
+
 void
 register_dal_methods(py::module& m)
 {
@@ -131,6 +174,10 @@ register_dal_methods(py::module& m)
   m.def("daqapp_get_used_resources", &daq_application_get_used_hostresources, "Get list of HostResources used by DAQApplication");
   m.def("daq_application_construct_commandline_parameters", &daq_application_construct_commandline_parameters, "Get a version of the command line agruments parsed");
   m.def("rc_application_construct_commandline_parameters", &rc_application_construct_commandline_parameters, "Get a version of the command line agruments parsed");
+
+  m.def("d2d_receiver", &d2d_receiver, "Get receiver associated with DetectorToDaqConnection");
+  m.def("d2d_senders", &d2d_senders, "Get senders associated with DetectorToDaqConnection");
+  m.def("d2d_streams", &d2d_streams, "Get streams associated with DetectorToDaqConnection");
 }
 
 } // namespace dunedaq::confmodel::python

@@ -368,14 +368,14 @@ const std::vector<std::string> RCApplication::construct_commandline_parameters(
 
 
 std::vector<const confmodel::DetectorStream*>
-DetectorToDaqConnection::get_streams() const {
-  std::vector<const confmodel::DetectorStream*> streams;
+DetectorToDaqConnection::streams() const {
+  std::vector<const confmodel::DetectorStream*> all_streams;
   // Loop over senders
   for (auto sender : this->senders()) {
     auto sender_streams = sender->get_streams();
-    streams.insert(streams.end(), sender_streams.begin(), sender_streams.end());
+    all_streams.insert(all_streams.end(), sender_streams.begin(), sender_streams.end());
   }
-  return streams;
+  return all_streams;
 }
 
 std::string OpMonURI::get_URI( const std::string & /* app */) const {

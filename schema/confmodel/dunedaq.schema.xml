@@ -80,7 +80,7 @@
 
 <oks-schema>
 
-<info name="" type="" num-of-items="49" oks-format="schema" oks-version="862f2957270" created-by="jcfree" created-on="mu2edaq13.fnal.gov" creation-time="20230123T223700" last-modified-by="gjc" last-modified-on="latitude" last-modification-time="20250624T094910"/>
+<info name="" type="" num-of-items="49" oks-format="schema" oks-version="862f2957270" created-by="jcfree" created-on="mu2edaq13.fnal.gov" creation-time="20230123T223700" last-modified-by="gjc" last-modified-on="latitude" last-modification-time="20250625T130407"/>
 
  <class name="ActionPlan" description="A set of parallel steps for an application to carry out a command">
   <attribute name="execution_policy" description="How the application should execute steps of the action plan" type="enum" range="modules-in-parallel,modules-in-series" init-value="modules-in-parallel"/>
@@ -177,8 +177,8 @@
 
  <class name="DetectorToDaqConnection" is-abstract="yes">
   <superclass name="ResourceSet"/>
-  <method name="get_streams" description="">
-   <method-implementation language="c++" prototype="std::vector&lt;const confmodel::DetectorStream*&gt; get_streams() const" body=""/>
+  <method name="streams" description="">
+   <method-implementation language="c++" prototype="std::vector&lt;const confmodel::DetectorStream*&gt; streams() const" body=""/>
   </method>
   <method name="contained_resources" description="">
    <method-implementation language="c++" prototype="virtual std::vector&lt;const Resource*&gt; contained_resources() const override" body=""/>
