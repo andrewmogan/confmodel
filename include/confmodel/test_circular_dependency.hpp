@@ -2,7 +2,7 @@
 #define _daq_core_test_circular_dependency_H_
 
 
-#include "confmodel/util.hpp"
+
 
 namespace dunedaq {
   namespace conffwk {
