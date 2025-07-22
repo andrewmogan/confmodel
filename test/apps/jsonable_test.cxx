@@ -14,7 +14,7 @@
 using namespace dunedaq;
 
 
-int main(int argc, char* argv[]) {
+int main(int /*argc*/, char* /*argv*/[]) {
   std::list<std::string> inc_files{"schema/confmodel/dunedaq.schema.xml"};
   conffwk::Configuration confdb ("oksconflibs");
   std::string dbfile{"/tmp/js-test.data.xml"};

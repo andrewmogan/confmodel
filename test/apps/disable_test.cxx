@@ -2,7 +2,7 @@
 
 #include "conffwk/Configuration.hpp"
 
-#include "confmodel/Component.hpp"
+#include "confmodel/ResourceBase.hpp"
 #include "confmodel/DaqApplication.hpp"
 #include "confmodel/DaqModule.hpp"
 #include "confmodel/ResourceSet.hpp"
@@ -84,7 +84,7 @@ int main(int argc, char* argv[]) {
   listApps(session);
 
   std::cout << "======\nNow trying to set enabled  \n";
-  std::set<const confmodel::Component*> enable;
+  std::set<const confmodel::ResourceBase*> enable;
   for (auto item : disabled) {
     enable.insert(item);
   }
