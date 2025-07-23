@@ -9,52 +9,52 @@
  */
 
 #include "confmodel/Application.hpp"
-#include "confmodel/Component.hpp"
+#include "confmodel/confmodelIssues.hpp"
 #include "confmodel/DaqApplication.hpp"
 #include "confmodel/DaqModule.hpp"
+#include "confmodel/DetDataSender.hpp"
+#include "confmodel/DetDataReceiver.hpp"
+#include "confmodel/DetectorToDaqConnection.hpp"
+#include "confmodel/DetectorStream.hpp"
 #include "confmodel/Jsonable.hpp"
 #include "confmodel/OpMonURI.hpp"
 #include "confmodel/PhysicalHost.hpp"
 #include "confmodel/RCApplication.hpp"
 #include "confmodel/Resource.hpp"
-#include "confmodel/ResourceSetAND.hpp"
-#include "confmodel/ResourceSetOR.hpp"
+#include "confmodel/ResourceSet.hpp"
 #include "confmodel/Segment.hpp"
 #include "confmodel/Session.hpp"
 #include "confmodel/Service.hpp"
 #include "confmodel/VirtualHost.hpp"
 
-#include "test_circular_dependency.hpp"
+#include "confmodel/test_circular_dependency.hpp"
 
 #include "nlohmann/json.hpp"
 #include "conffwk/ConfigObject.hpp"
 #include "conffwk/Configuration.hpp"
 #include "conffwk/Schema.hpp"
-#include "confmodel/DetDataSender.hpp"
-#include "confmodel/DetDataReceiver.hpp"
-#include "confmodel/DetectorToDaqConnection.hpp"
-#include "confmodel/DetectorStream.hpp"
 
 #include <list>
 #include <set>
 #include <iostream>
 
-// Stolen from ATLAS dal package
 using namespace dunedaq::conffwk;
 
-namespace dunedaq::confmodel {
+
+// Stolen from ATLAS dal package
+namespace {
   /**
    *  Static function to calculate list of components
    *  from the root segment to the lowest component which
    *  the child object (a segment or a resource) belongs.
    */
 
-static void
+void
 make_parents_list(
     const ConfigObjectImpl * child,
     const dunedaq::confmodel::ResourceSet * resource_set,
-    std::vector<const dunedaq::confmodel::Component *> & p_list,
-    std::list< std::vector<const dunedaq::confmodel::Component *> >& out,
+    std::vector<const dunedaq::confmodel::Resource *> & p_list,
+    std::list< std::vector<const dunedaq::confmodel::Resource *> >& out,
     dunedaq::confmodel::TestCircularDependency& cd_fuse)
 {
   dunedaq::confmodel::AddTestOnCircularDependency add_fuse_test(cd_fuse, resource_set);
@@ -63,7 +63,7 @@ make_parents_list(
   p_list.push_back(resource_set);
 
   // check if the application is in the resource relationship, i.e. is a resource or belongs to resource set(s)
-  for (const auto& i : resource_set->get_contains()) {
+  for (const auto& i : resource_set->contained_resources()) {
     if (i->config_object().implementation() == child) {
       out.push_back(p_list);
     }
@@ -76,12 +76,12 @@ make_parents_list(
   p_list.pop_back();
 }
 
-static void
+void
 make_parents_list(
-    const ConfigObjectImpl * child,
+    const dunedaq::conffwk::ConfigObjectImpl * child,
     const dunedaq::confmodel::Segment * segment,
-    std::vector<const dunedaq::confmodel::Component *> & p_list,
-    std::list<std::vector<const dunedaq::confmodel::Component *> >& out,
+    std::vector<const dunedaq::confmodel::Resource *> & p_list,
+    std::list<std::vector<const dunedaq::confmodel::Resource *> >& out,
     bool is_segment,
     dunedaq::confmodel::TestCircularDependency& cd_fuse)
 {
@@ -112,35 +112,39 @@ make_parents_list(
 }
 
 
-static void
+void
 check_segment(
-    std::list< std::vector<const dunedaq::confmodel::Component *> >& out,
+    std::list< std::vector<const dunedaq::confmodel::Resource *> >& out,
     const dunedaq::confmodel::Segment * segment,
-    const ConfigObjectImpl * child,
+    const dunedaq::conffwk::ConfigObjectImpl * child,
     bool is_segment,
     dunedaq::confmodel::TestCircularDependency& cd_fuse)
 {
   dunedaq::confmodel::AddTestOnCircularDependency add_fuse_test(cd_fuse, segment);
 
-  std::vector<const dunedaq::confmodel::Component *> compList;
+  std::vector<const dunedaq::confmodel::Resource *> compList;
 
   if (segment->config_object().implementation() == child) {
     out.push_back(compList);
   }
   make_parents_list(child, segment, compList, out, is_segment, cd_fuse);
 }
+} // namespace
+
+
+namespace dunedaq::confmodel {
 
 void
-dunedaq::confmodel::Component::get_parents(
-  const dunedaq::confmodel::Session& session,
-  std::list<std::vector<const dunedaq::confmodel::Component *>>& parents) const
+Resource::parents(
+  const Session& session,
+  std::list<std::vector<const Resource *>>& parents) const
 {
   const ConfigObjectImpl * obj_impl = config_object().implementation();
 
-  const bool is_segment = castable(dunedaq::confmodel::Segment::s_class_name);
+  const bool is_segment = castable(Segment::s_class_name);
 
   try {
-    dunedaq::confmodel::TestCircularDependency cd_fuse("component parents", &session);
+    TestCircularDependency cd_fuse("component parents", &session);
 
     // check session's segment
     check_segment(parents, session.get_segment(), obj_impl, is_segment,
@@ -148,7 +152,7 @@ dunedaq::confmodel::Component::get_parents(
 
 
     if (parents.empty()) {
-      TLOG_DEBUG(1) <<  "cannot find segment/resource path(s) between Component " << this << " and session " << &session << " objects (check this object is linked with the session as a segment or a resource)" ;
+      TLOG_DEBUG(1) <<  "cannot find segment/resource path(s) between Resource " << this << " and session " << &session << " objects (check this object is linked with the session as a segment or a resource)" ;
     }
   }
   catch (ers::Issue & ex) {
@@ -158,15 +162,15 @@ dunedaq::confmodel::Component::get_parents(
 
 // ========================================================================
 
-  static std::vector<const Application*> getSegmentApps(const Segment* segment,
-                                                        const Session* session,
-                                                        bool enabled_only) {
+std::vector<const Application*>
+Session::getSegmentApps(const Segment* segment,
+                        bool enabled_only) const {
   std::vector<const Application*> apps;
   auto segapps = segment->get_applications();
   if (enabled_only) {
     for (auto app : segapps) {
-      auto comp = app->cast<Component>();
-      if (comp == nullptr || !comp->disabled(*session)) {
+      auto comp = app->cast<Resource>();
+      if (comp == nullptr || !comp->is_disabled(*this)) {
         apps.insert(apps.end(), app);
       }
     }
@@ -175,8 +179,8 @@ dunedaq::confmodel::Component::get_parents(
     apps.swap(segapps);
   }
   for (auto seg : segment->get_segments()) {
-    if (!enabled_only || !seg->disabled(*session)) {
-      auto segapps = getSegmentApps(seg, session, enabled_only);
+    if (!enabled_only || !seg->is_disabled(*this)) {
+      auto segapps = getSegmentApps(seg, enabled_only);
       apps.insert(apps.end(), segapps.begin(),segapps.end());
     }
   }
@@ -184,20 +188,21 @@ dunedaq::confmodel::Component::get_parents(
 }
 
 std::vector<const Application*>
-Session::get_all_applications() const {
+Session::all_applications() const {
   std::vector<const Application*> apps;
-  auto segapps = getSegmentApps(m_segment, this, false);
+  auto segapps = getSegmentApps(get_segment(), false);
   apps.insert(apps.end(), segapps.begin(),segapps.end());
   return apps;
 }
 
 std::vector<const Application*>
-Session::get_enabled_applications() const {
+Session::enabled_applications() const {
   std::vector<const Application*> apps;
-  auto segapps = getSegmentApps(m_segment, this, true);
+  auto segapps = getSegmentApps(get_segment(), true);
   apps.insert(apps.end(), segapps.begin(),segapps.end());
   return apps;
 }
+
 
 // ========================================================================
 
@@ -361,76 +366,19 @@ const std::vector<std::string> RCApplication::construct_commandline_parameters(
 }
 
 
-std::vector<const confmodel::DetDataSender*> DetectorToDaqConnection::get_senders() const {
-  std::vector<const confmodel::DetDataSender*> senders;
 
-  for ( auto d2d_res : this->get_contains() ) {
-      // Maybe senders not in a resource set so check for direct containment
-      auto sender = d2d_res->cast<confmodel::DetDataSender>();
-      if ( sender != nullptr ) {
-          senders.push_back(sender);
-      }
-      else {
-          // Look for a resource set containing senders
-          auto rs = d2d_res->cast<confmodel::ResourceSet>();
-          if (rs != nullptr) {
-              // Look for senders in resource set
-              for (auto res : rs->get_contains()) {
-                  auto sender = res->cast<confmodel::DetDataSender>();
-                  if ( sender != nullptr ) {
-                      senders.push_back(sender);
-                  }
-              }
-          }
-      }
+std::vector<const confmodel::DetectorStream*>
+DetectorToDaqConnection::streams() const {
+  std::vector<const confmodel::DetectorStream*> all_streams;
+  // Loop over senders
+  for (auto sender : this->senders()) {
+    auto sender_streams = sender->get_streams();
+    all_streams.insert(all_streams.end(), sender_streams.begin(), sender_streams.end());
   }
-
-  return senders;
+  return all_streams;
 }
 
-
-const confmodel::DetDataReceiver* DetectorToDaqConnection::get_receiver() const {
-
-  std::vector<const confmodel::DetDataReceiver*> receivers;
-
-  for ( auto d2d_res : this->get_contains() ) {
-      auto r = d2d_res->cast<confmodel::DetDataReceiver>();
-      if ( r == nullptr )
-        continue;
-
-      receivers.push_back(r);
-  }
-
-  if (receivers.size() != 1) {
-      throw(ConfigurationError(ERS_HERE, "DetectorToDaqConnection : expected 1 receiver in D2d conection {name of connection}, found {number found}"));
-  }
-
-  // Receiver identified
-  return receivers.at(0);
-
-}
-
-
-std::vector<const confmodel::DetectorStream*> DetectorToDaqConnection::get_streams() const {
-
-  std::vector<const confmodel::DetectorStream*> streams;
-    // Loop over senders
-    for (auto sender : this->get_senders()) {
-      // loop over streams
-      for (auto stream_res : sender->get_contains()) {
-        auto stream = stream_res->cast<confmodel::DetectorStream>();
-        if ( !stream ) {
-          throw(ConfigurationError(ERS_HERE, "DetectorToDaqConnection : Non-stream object '"+stream_res->UID()+"' found in DetDataSender '"+stream_res->UID()+"'"));
-        }
-
-        streams.push_back(stream->cast<confmodel::DetectorStream>());
-      }
-    }
-
-  return streams;
-}
-
-std::string OpMonURI::get_URI( const std::string & app ) const {
+std::string OpMonURI::get_URI( const std::string & /* app */) const {
 
   auto type = get_type();
   if ( type == "file" ) {
@@ -444,5 +392,65 @@ std::string OpMonURI::get_URI( const std::string & app ) const {
   return "stdout://";
 }
 
+bool Resource::is_disabled(const dunedaq::confmodel::ResourceTree& holder) const {
+  return (!holder.disabled_components().is_enabled(this));
+}
+bool Resource::compute_disabled_state(const std::set<std::string>& disabled_resources) const {
+  TLOG_DEBUG(6) << "No compute_disabled_state method defined for Resource " << class_name();
+  if (disabled_resources.contains(UID())) {
+    return true;
+  }
+  return false;
 }
 
+std::vector<const Resource*> DetDataSender::contained_resources() const {
+  return to_resources(get_streams());
+}
+
+std::vector<const Resource*> DetectorToDaqConnection::contained_resources() const {
+  auto res = to_resources(senders());
+  res.push_back(receiver());
+  return res;
+}
+
+
+bool
+DetectorToDaqConnection::compute_disabled_state(const std::set<std::string>& disabled_resources) const {
+  if (disabled_resources.contains(UID())) {
+    return true;
+  }
+  bool send_disabled = true;
+  for (auto sender: senders()) {
+    if (!sender->compute_disabled_state(disabled_resources)) {
+      send_disabled = false;
+      break;
+    }
+  }
+  TLOG_DBG(6) << "receiver disabled=" << receiver()->compute_disabled_state(disabled_resources)
+              << " senders disabled=" << send_disabled;
+  if (receiver()->compute_disabled_state(disabled_resources) || send_disabled) {
+    return true;
+  }
+  return false;
+}
+
+std::vector<const Resource*>
+Segment::contained_resources() const {
+  // All our contained segments are resources
+  std::vector<const Resource*> resources = to_resources(get_segments());
+
+  // Only a subset of our applications might be resources so check individually
+  for (auto app: get_applications()) {
+    TLOG_DBG(6) << "Checking " << app->UID();
+    auto res=app->cast<const Resource>();
+    if (res != nullptr) {
+      TLOG_DBG(6) << "Adding " << app->UID();
+      resources.push_back(res);
+    }
+  }
+  TLOG_DBG(6) << "Returning vector of " << resources.size() << " resources";
+  return resources;
+}
+
+
+} // namespace dunedaq::confmodel
