@@ -138,7 +138,7 @@
  </class>
 
  <class name="DaqModulesGroup" description="Represents a group of DAQ Modules that can run commands in parallel or in series as one of the steps of an ActionPlan." is-abstract="yes">
-  <attribute name="optional" type="bool" init-value="false" description="When true, the application will not generate a warning message if no modules match this DaqModulesGroup"/>
+  <attribute name="optional" type="bool" init-value="false" description="When true, the application will not generate a warning message if no modules in the application match this DaqModulesGroup"/>
  </class>
 
  <class name="DaqModulesGroupById">
