@@ -82,8 +82,8 @@
 
 <info name="" type="" num-of-items="49" oks-format="schema" oks-version="862f2957270" created-by="jcfree" created-on="mu2edaq13.fnal.gov" creation-time="20230123T223700" last-modified-by="gjc" last-modified-on="latitude" last-modification-time="20250625T130407"/>
 
- <class name="ActionPlan" description="A set of parallel steps for an application to carry out a command">
-  <attribute name="execution_policy" description="How the application should execute steps of the action plan" type="enum" range="modules-in-parallel,modules-in-series" init-value="modules-in-parallel"/>
+ <class name="ActionPlan" description="A set of steps for an application to carry out a command">
+  <attribute name="execution_policy" description="How the application should dispatch the command to modules matched by each step of the ActionPlan" type="enum" range="modules-in-parallel,modules-in-series" init-value="modules-in-parallel"/>
   <relationship name="command" class-type="FSMCommand" low-cc="one" high-cc="one" is-composite="no" is-exclusive="no" is-dependent="no"/>
   <relationship name="steps" class-type="DaqModulesGroup" low-cc="zero" high-cc="many" is-composite="no" is-exclusive="no" is-dependent="no"/>
  </class>
@@ -137,7 +137,7 @@
   <relationship name="used_resources" class-type="HostComponent" low-cc="zero" high-cc="many" is-composite="yes" is-exclusive="no" is-dependent="yes"/>
  </class>
 
- <class name="DaqModulesGroup" description="Represents a group of DAQ Modules that can run commands in parallel as one of the steps of an ActionPlan." is-abstract="yes">
+ <class name="DaqModulesGroup" description="Represents a group of DAQ Modules that can run commands in parallel or in series as one of the steps of an ActionPlan." is-abstract="yes">
  </class>
 
  <class name="DaqModulesGroupById">
