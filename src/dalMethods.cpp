@@ -452,5 +452,23 @@ Segment::contained_resources() const {
   return resources;
 }
 
+bool
+Segment::compute_disabled_state(const std::set<std::string>& disabled) const {
+  if (disabled.contains(UID())) {
+    return true;
+  }
+  for (auto app: get_applications()) {
+    auto res=app->cast<const Resource>();
+    if (res == nullptr) {
+      return false;
+    }
+  }
+  for (auto res: contained_resources()) {
+    if (!res->compute_disabled_state(disabled)) {
+      return false;
+    }
+  }
+  return true;
+}
 
 } // namespace dunedaq::confmodel
