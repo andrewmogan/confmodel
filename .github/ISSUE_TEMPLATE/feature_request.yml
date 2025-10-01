@@ -1,0 +1,49 @@
+name: "Feature Request"
+description: Propose a new feature or enhancement
+title: "[Feature]: "
+labels: ["enhancement"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form to suggest a new feature or enhancement.  
+        Please provide enough detail for maintainers to understand the need and scope.
+        If you encounter a problem with this form, contact software coordination.
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: Briefly describe the feature you are requesting
+      placeholder: "Add support for exporting results to JSON format."
+
+  - type: textarea
+    id: usecase
+    attributes:
+      label: Use Case
+      description: Explain how this feature would be useful, including who would benefit
+      placeholder: "This would allow integration with downstream tools that consume JSON."
+
+  - type: textarea
+    id: details
+    attributes:
+      label: Proposed Solution (optional)
+      description: If you have ideas for how this could be implemented, describe them here
+      placeholder: "Add a `--output json` flag to the CLI that formats results accordingly."
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered (optional)
+      description: Mention any workarounds or alternatives you’ve tried
+      placeholder: "Currently I export to CSV and manually convert to JSON."
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist
+      options:
+        - label: I have checked whether this request overlaps with existing issues
+          required: true

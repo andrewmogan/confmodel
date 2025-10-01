@@ -1,0 +1,64 @@
+name: "Documentation Update"
+description: Suggest changes or additions to the documentation
+title: "[Docs]: "
+labels: ["documentation"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for helping improve our documentation.  
+        Please provide enough detail so that maintainers can understand and act on your suggestion.
+        If you encounter a problem with this form, contact software coordination.
+
+  - type: dropdown
+    id: type
+    attributes:
+      label: Type of Documentation Update
+      description: What kind of update are you proposing?
+      options:
+        - Correction (typos, inaccuracies, or broken links)
+        - Clarification (improving explanations or instructions)
+        - Addition (new content, sections, or examples)
+        - Removal (outdated or redundant content)
+
+  - type: input
+    id: location
+    attributes:
+      label: Location
+      description: Provide the file path or URL where the change is needed
+      placeholder: "docs/getting_started.md"
+
+  - type: textarea
+    id: current
+    attributes:
+      label: Current Documentation
+      description: Paste or summarize the relevant existing content
+      placeholder: |
+        The current text says "Install by running `make`"...
+
+  - type: textarea
+    id: proposed
+    attributes:
+      label: Proposed Update
+      description: Suggest new wording, corrections, or additions
+      placeholder: |
+        Change to: "Install by running `make install` to ensure dependencies are included."
+
+  - type: textarea
+    id: rationale
+    attributes:
+      label: Rationale
+      description: Explain why this change is necessary or helpful
+      placeholder: "The current instructions are incomplete and may cause build errors."
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist
+      options:
+        - label: I have checked whether this update overlaps with existing issues or PRs
+          required: true
+        - label: I have verified the accuracy of the proposed change
+          required: true

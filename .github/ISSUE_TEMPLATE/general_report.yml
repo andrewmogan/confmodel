@@ -1,0 +1,38 @@
+name: "General Report"
+description: Provide feedback, ask a question, or raise a concern not covered by other issue forms
+title: "[Report]: "
+labels: ["discussion"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form for topics that don’t fit into bug reports, feature requests, or documentation updates.  
+        This could include general feedback, process suggestions, or open questions.
+        If you encounter a problem with this form, contact software coordination.
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Category
+      description: What type of report are you submitting?
+      options:
+        - Question
+        - Feedback
+        - Process Improvement
+        - Other
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: Provide the details of your report
+      placeholder: "I have a question about the release schedule…"
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional Context (optional)
+      description: Add any relevant background, examples, or references
+      placeholder: "For example: links to related issues, PRs, or external documentation."

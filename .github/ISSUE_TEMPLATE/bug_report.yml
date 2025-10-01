@@ -9,7 +9,7 @@ body:
     attributes:
       value: |
         Please provide as much information as possible so we can reproduce and fix the issue quickly.
-        If you encounter issues with this form, contact software coordination.
+        If you encounter a problem with this form, contact software coordination.
 
   - type: input
     id: summary
