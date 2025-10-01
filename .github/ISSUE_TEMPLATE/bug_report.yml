@@ -75,7 +75,6 @@ body:
         ```
         ERROR: config file not found
         ```
-      render: shell
 
   - type: checkboxes
     id: checks
