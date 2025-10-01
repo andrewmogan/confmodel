@@ -1,0 +1,88 @@
+name: "Bug Report"
+description: Report something that isn’t working as expected.
+title: "[Bug]: "
+labels: ["bug"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please provide as much information as possible so we can reproduce and fix the issue quickly.
+        If you encounter issues with this form, contact software coordination.
+
+  - type: input
+    id: summary
+    attributes:
+      label: Summary
+      description: A short (1-2 sentence) description of the bug
+      placeholder: "Unable to setup environment in a local DUNE DAQ area"
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to Reproduce
+      description: Step-by-step instructions to reproduce the issue
+      placeholder: |
+        1. Run `dbt-create -n last_fddaq`
+        2. `cd $DBT_AREA_ROOT && source env.sh`
+        3. Observe the failure
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What should have happened instead?
+      placeholder: "`source env.sh` should finish without errors."
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior
+      description: What actually happened?
+      placeholder: "The script fails with error code 137."
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Version / Commit
+      description: Which version, tag, or commit were you using?
+      placeholder: "Nightly build NFD_DEV_251001_A9"
+    validations:
+      required: true
+
+  - type: input
+    id: node
+    attributes:
+      label: Node
+      description: Where did you encounter the issue?
+      placeholder: "np04-srv-013.cern.ch"
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / Screenshots
+      description: Paste relevant logs, stack traces, or screenshots
+      placeholder: |
+        ```
+        ERROR: config file not found
+        ```
+      render: shell
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist
+      options:
+        - label: I have searched existing issues to avoid duplicates
+          required: true
+        - label: I have included all relevant details (steps, logs, environment)
+          required: true
