@@ -20,3 +20,8 @@ issue_templates:
     title: "[General]: "
     labels: ["general"]
     body: "./ISSUE_TEMPLATE/general_report.md"
+  - name: "Test form"
+    description: "Test"
+    title: "[TEST]"
+    labels: ["test"]
+    body: "./ISSUE_TEMPLATE/test.yml"
