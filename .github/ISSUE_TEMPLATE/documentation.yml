@@ -1,8 +1,8 @@
-name: "Documentation Update"
-description: Suggest changes or additions to the documentation
-title: "[Docs]: "
-labels: ["documentation"]
-assignees: []
+#name: "Documentation Update"
+#description: Suggest changes or additions to the documentation
+#title: "[Docs]: "
+#labels: ["documentation"]
+#assignees: []
 
 body:
   - type: markdown
