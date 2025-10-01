@@ -1,0 +1,63 @@
+name: "Large Impact Radius Change"
+description: Describe or request modifications that change software or user interfaces, change the way that users run the system, or change underlying system behavior
+title: "[LargeImpactChange]: "
+labels: []
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please provide enough detail so that maintainers can understand and act on your suggestion.
+        If you encounter a problem with this form, contact software coordination. 
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What is changing and why. For example, what prompted this change?
+      placeholder: "Update to integration testing fixuture to improve consistency."
+
+  - type: textarea
+    id: impact
+    attributes:
+      label: Impact to Users and/or Developers
+      description: Describe any breaking changes users and/or developers will need to make in response to this change.
+      placeholder: The run controls commands moving forward will be...
+
+  - type: textarea
+    id: system_changes
+    attributes:
+      label: Changes to the System
+      description: Describe how the system will change.
+      placeholder: This will change how data is drained from the system when a run is stopped.
+
+  - type: textarea
+    id: testing
+    attributes:
+      label: Testing
+      description: What steps would a reviewer use to see the change(s) in action?
+      placeholder: |
+        1. Setup local DUNE DAQ area with this feature branch checked out in [list repos]
+        2. Run my_new_script.py
+        3. etc. 
+
+  - type: textarea
+    id: correlated_issues_and_prs
+    attributes:
+      label: Correlated Issues and/or PRs
+      description: List all Issues and/or PRs that are part of this change. The sub-issue functionality in GitHub can also be used.
+
+  - type: textarea
+    id: coordination
+    attributes:
+      label: Useful coordination
+      description: List whatever coordination between developers or groups will be useful, such as the timing of merges or updating of documentation or updating of configurations
+      placeholder: Correlated PR in daq-cmake needs to be merged before these changes are merged into develop.
+
+  - type: textarea
+    id: changes_in_testing
+    attributes:
+      label: Changes in testing
+      description: List any new or modified regression tests that this change will require.
+      placeholder: minimal_system_quick_test will need to be modified to accommodate...
