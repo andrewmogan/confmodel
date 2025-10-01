@@ -1,87 +1,60 @@
-name: "Bug Report"
-description: Report something that isn’t working as expected.
+name: Bug Report
+description: Report a bug in the system
 title: "[Bug]: "
 labels: ["bug"]
-assignees: []
-
+projects: ["DUNE-DAQ/5"]
 body:
-  - type: markdown
-    attributes:
-      value: |
-        Please provide as much information as possible so we can reproduce and fix the issue quickly.
-        If you encounter a problem with this form, contact software coordination.
-
-  - type: input
-    id: summary
-    attributes:
-      label: Summary
-      description: A short (1-2 sentence) description of the bug
-      placeholder: "Unable to setup environment in a local DUNE DAQ area"
-
   - type: textarea
-    id: steps
+    id: description
     attributes:
-      label: Steps to Reproduce
-      description: Step-by-step instructions to reproduce the issue
+      label: Description
+      description: Give a clear and concise description of the bug, included what you expected to happen and what the actual behavior was.
+      placeholder: "What happened?"
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: Give a clear set of steps to reproduce the error or how you saw the error.
       placeholder: |
-        1. Run `dbt-create -n last_fddaq`
-        2. `cd $DBT_AREA_ROOT && source env.sh`
-        3. Observe the failure
+        1. Go to...
+        1. Setup...
+        1. Run...
+        1. See error...
     validations:
       required: true
-
   - type: textarea
-    id: expected
-    attributes:
-      label: Expected Behavior
-      description: What should have happened instead?
-      placeholder: "`source env.sh` should finish without errors."
-    validations:
-      required: true
-
-  - type: textarea
-    id: actual
-    attributes:
-      label: Actual Behavior
-      description: What actually happened?
-      placeholder: "The script fails with error code 137."
-    validations:
-      required: true
-
-  - type: input
     id: version
     attributes:
-      label: Version / Commit
-      description: Which version, tag, or commit were you using?
-      placeholder: "Nightly build NFD_DEV_251001_A9"
+      label: Version and environment
+      description: Give the dunedaq version and environment in which you saw the error
+      placeholder: "[e.g., 'fddaq-v5.4.1, ProtoDUNE-VD' or 'NFD_DEV_251023_A9, regression tests']"
     validations:
       required: true
-
-  - type: input
-    id: node
+  - type: dropdown
+    id: impact-radius
     attributes:
-      label: Node
-      description: Where did you encounter the issue?
-      placeholder: "np04-srv-013.cern.ch"
-    validations:
-      required: true
-
-  - type: textarea
-    id: logs
-    attributes:
-      label: Logs / Screenshots
-      description: Paste relevant logs, stack traces, or screenshots
-      placeholder: |
-        ```
-        ERROR: config file not found
-        ```
-
-  - type: checkboxes
-    id: checks
-    attributes:
-      label: Checklist
+      label: Impact
+      description: |
+        What do you think this bug's "impact radius" is?
+          - _Small/Isolated_: Affects one repo/one subsystem
+          - _Medium_: Affects multiple repos and/or multiple functionalities within one subsystem
+          - _Large_: Affects many repos and/or core underlying functionality of many parts of DUNE DAQ
       options:
-        - label: I have searched existing issues to avoid duplicates
-          required: true
-        - label: I have included all relevant details (steps, logs, environment)
-          required: true
+        - Small/Isolated
+        - Medium
+        - Large
+        - ???
+      default: 0
+    validations:
+       required: true
+  - type: textarea
+    attributes:
+      label: Anything else?
+      description: |
+        Links? References? Anything that will give us more context about the issue you are encountering!
+
+        Tip: You can attach images or log files by clicking this area to highlight it and then dragging files in.
+    validations:
+      required: false        
