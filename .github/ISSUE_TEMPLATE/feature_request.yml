@@ -39,7 +39,7 @@ body:
     attributes:
       label: Reason for change
       description: Explain why you think this feature/enhancement is needed.
-      placeholder: "Explanation here..."
+      placeholder: "Blah blah blah"
     validations:
       required: false
   - type: textarea
