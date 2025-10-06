@@ -46,7 +46,7 @@ body:
         - Medium
         - Large
         - ???
-      default: 1
+      default: 3
     validations:
        required: true
   - type: textarea

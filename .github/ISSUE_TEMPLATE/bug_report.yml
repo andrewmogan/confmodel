@@ -2,7 +2,7 @@ name: Bug Report
 description: Report a bug in the system
 title: "[Bug]: "
 labels: ["bug"]
-projects: ["DUNE-DAQ/4"]
+projects: ["DUNE-DAQ/5"]
 body:
   - type: textarea
     id: description

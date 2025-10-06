@@ -1,6 +1,4 @@
 name: Documentation
-
-
 description: Suggest updates or additions to the documentation that don't include changes in functionality.
 title: "[Doc]: "
 labels: ["documentation"]
