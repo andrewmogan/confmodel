@@ -15,7 +15,6 @@ body:
   - type: textarea
     id: suggestion
     attributes:
-      label: Suggested changes
       description: Give some suggested changes for the documentation
       placeholder: "Add detail on class ABC..."
     validations:

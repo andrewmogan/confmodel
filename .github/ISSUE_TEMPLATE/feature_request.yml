@@ -31,8 +31,6 @@ body:
         - Medium
         - Large
         - ???
-      default: 1
-    validations:
        required: true
   - type: textarea
     id: justification
