@@ -1,4 +1,4 @@
-name: Documentation
+name: Documentation (special confmodel edition)
 description: Suggest updates or additions to the documentation that don't include changes in functionality.
 title: "[Doc]: "
 labels: ["documentation"]
