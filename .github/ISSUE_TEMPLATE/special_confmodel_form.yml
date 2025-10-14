@@ -1,0 +1,14 @@
+name: Special confmodel form
+description: This is a test of the sync script
+title: "[Test]: "
+labels: ["test"]
+projects: ["DUNE-DAQ/5"]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: Did the test work?
+      placeholder: "What happened?"
+    validations:
+      required: true
