@@ -42,3 +42,4 @@ daq_add_unit_test(DisabledResource_test LINK_LIBRARIES confmodel_dal conffwk::co
 
 daq_install()
 
+
